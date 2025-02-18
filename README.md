@@ -61,8 +61,8 @@ The repo is based on the [VMama repo](https://github.com/MzeroMiko/VMamba), thus
 
 Clone this repository and navigate to the project directory:
 ```bash
-git clone https://github.com/ChenHongruixuan/MambaCD.git
-cd MambaCD
+git clone https://github.com/ChenHongruixuan/RemoteSensing.git
+cd RemoteSensing
 ```
 
 
@@ -94,7 +94,7 @@ pip install mmdet==3.3.0 mmsegmentation==1.2.2 mmpretrain==1.2.0
 ### `B. Download Pretrained Weight`
 Also, please download the pretrained weights of [VMamba-Tiny](https://drive.google.com/file/d/160PXughGMNZ1GyByspLFS68sfUdrQE2N/view?usp=drive_link), [VMamba-Small](https://drive.google.com/file/d/1dxHtFEgeJ9KL5WiLlvQOZK5jSEEd2Nmz/view?usp=drive_link), and [VMamba-Base](https://drive.google.com/file/d/1kUHSBDoFvFG58EmwWurdSVZd8gyKWYfr/view?usp=drive_link) and put them under 
 ```bash
-project_path/MambaCD/pretrained_weight/
+project_path/RemoteSensing/pretrained_weight/
 ```
 
 ### `C. Data Preparation`
@@ -199,7 +199,7 @@ ${DATASET_ROOT}   # Dataset root directory, for example: /home/username/data/xBD
 Before training models, please enter into [`changedetection`] folder, which contains all the code for network definitions, training and testing. 
 
 ```bash
-cd <project_path>/MambaCD/changedetection
+cd <project_path>/RemoteSensing/changedetection
 ```
 
 ***Binary change detection***
@@ -211,13 +211,13 @@ python script/train_MambaBCD.py  --dataset 'SYSU' \
                                  --crop_size 256 \
                                  --max_iters 320000 \
                                  --model_type MambaBCD_Small \
-                                 --model_param_path '<project_path>/MambaCD/changedetection/saved_models' \ 
+                                 --model_param_path '<project_path>/RemoteSensing/changedetection/saved_models' \ 
                                  --train_dataset_path '<dataset_path>/SYSU/train' \
                                  --train_data_list_path '<dataset_path>/SYSU/train_list.txt' \
                                  --test_dataset_path '<dataset_path>/SYSU/test' \
                                  --test_data_list_path '<dataset_path>/SYSU/test_list.txt'
-                                 --cfg '<project_path>/MambaCD/changedetection/configs/vssm1/vssm_small_224.yaml' \
-                                 --pretrained_weight_path '<project_path>/MambaCD/pretrained_weight/vssm_small_0229_ckpt_epoch_222.pth'
+                                 --cfg '<project_path>/RemoteSensing/changedetection/configs/vssm1/vssm_small_224.yaml' \
+                                 --pretrained_weight_path '<project_path>/RemoteSensing/pretrained_weight/vssm_small_0229_ckpt_epoch_222.pth'
 ```
 
 ***Semantic change detection***
@@ -229,13 +229,13 @@ python script/train_MambaSCD.py  --dataset 'SECOND' \
                                  --crop_size 256 \
                                  --max_iters 800000 \
                                  --model_type MambaSCD_Small \
-                                 --model_param_path '<project_path>/MambaCD/changedetection/saved_models' \ 
+                                 --model_param_path '<project_path>/RemoteSensing/changedetection/saved_models' \ 
                                  --train_dataset_path '<dataset_path>/SECOND/train' \
                                  --train_data_list_path '<dataset_path>/SECOND/train_list.txt' \
                                  --test_dataset_path '<dataset_path>/SECOND/test' \
                                  --test_data_list_path '<dataset_path>/SECOND/test_list.txt'
-                                 --cfg '<project_path>/MambaCD/changedetection/configs/vssm1/vssm_small_224.yaml' \
-                                 --pretrained_weight_path '<project_path>/MambaCD/pretrained_weight/vssm_small_0229_ckpt_epoch_222.pth'
+                                 --cfg '<project_path>/RemoteSensing/changedetection/configs/vssm1/vssm_small_224.yaml' \
+                                 --pretrained_weight_path '<project_path>/RemoteSensing/pretrained_weight/vssm_small_0229_ckpt_epoch_222.pth'
 ```
 
 ***Building Damge Assessment***
@@ -247,19 +247,19 @@ python script/train_MambaSCD.py  --dataset 'xBD' \
                                  --crop_size 256 \
                                  --max_iters 800000 \
                                  --model_type MambaBDA_Small \
-                                 --model_param_path '<project_path>/MambaCD/changedetection/saved_models' \ 
+                                 --model_param_path '<project_path>/RemoteSensing/changedetection/saved_models' \ 
                                  --train_dataset_path '<dataset_path>/xBD/train' \
                                  --train_data_list_path '<dataset_path>/xBD/train_list.txt' \
                                  --test_dataset_path '<dataset_path>/xBD/test' \
                                  --test_data_list_path '<dataset_path>/xBD/test_list.txt'
-                                 --cfg '<project_path>/MambaCD/changedetection/configs/vssm1/vssm_small_224.yaml' \
-                                 --pretrained_weight_path '<project_path>/MambaCD/pretrained_weight/vssm_small_0229_ckpt_epoch_222.pth'
+                                 --cfg '<project_path>/RemoteSensing/changedetection/configs/vssm1/vssm_small_224.yaml' \
+                                 --pretrained_weight_path '<project_path>/RemoteSensing/pretrained_weight/vssm_small_0229_ckpt_epoch_222.pth'
 ```
 ### `E. Inference Using Our/Your Weights`
 
 Before inference, please enter into [`changedetection`] folder. 
 ```bash
-cd <project_path>/MambaCD/changedetection
+cd <project_path>/RemoteSensing/changedetection
 ```
 
 
@@ -274,8 +274,8 @@ python script/infer_MambaBCD.py  --dataset 'LEVIR-CD+' \
                                  --model_type 'MambaBCD_Tiny' \
                                  --test_dataset_path '<dataset_path>/LEVIR-CD+/test' \
                                  --test_data_list_path '<dataset_path>/LEVIR-CD+/test_list.txt' \
-                                 --cfg '<project_path>/MambaCD/changedetection/configs/vssm1/vssm_tiny_224_0229flex.yaml' \
-                                 --pretrained_weight_path '<project_path>/MambaCD/pretrained_weight/vssm_tiny_0230_ckpt_epoch_262.pth'
+                                 --cfg '<project_path>/RemoteSensing/changedetection/configs/vssm1/vssm_tiny_224_0229flex.yaml' \
+                                 --pretrained_weight_path '<project_path>/RemoteSensing/pretrained_weight/vssm_tiny_0230_ckpt_epoch_262.pth'
                                  --resume '<saved_model_path>/MambaBCD_Tiny_LEVIRCD+_F1_0.8803.pth'
 ```
 
@@ -287,8 +287,8 @@ python script/infer_MambaBCD.py  --dataset 'SECOND'  \
                                  --model_type 'MambaSCD_Tiny' \
                                  --test_dataset_path '<dataset_path>/SECOND/test' \
                                  --test_data_list_path '<dataset_path>/SECOND/test_list.txt' \
-                                 --cfg '<project_path>/MambaCD/changedetection/configs/vssm1/vssm_tiny_224_0229flex.yaml' \
-                                 --pretrained_weight_path '<project_path>/MambaCD/pretrained_weight/vssm_tiny_0230_ckpt_epoch_262.pth'
+                                 --cfg '<project_path>/RemoteSensing/changedetection/configs/vssm1/vssm_tiny_224_0229flex.yaml' \
+                                 --pretrained_weight_path '<project_path>/RemoteSensing/pretrained_weight/vssm_tiny_0230_ckpt_epoch_262.pth'
                                  --resume '<saved_model_path>/[your_trained_model].pth'
 ```
 
@@ -300,8 +300,8 @@ python script/infer_MambaBDA.py  --dataset 'SECOND'  \
                                  --model_type 'MambaSCD_Tiny' \
                                  --test_dataset_path '<dataset_path>/xBD/test' \
                                  --test_data_list_path '<dataset_path>/xBD/test_list.txt' \
-                                 --cfg '<project_path>/MambaCD/changedetection/configs/vssm1/vssm_tiny_224_0229flex.yaml' \
-                                 --pretrained_weight_path '<project_path>/MambaCD/pretrained_weight/vssm_tiny_0230_ckpt_epoch_262.pth'
+                                 --cfg '<project_path>/RemoteSensing/changedetection/configs/vssm1/vssm_tiny_224_0229flex.yaml' \
+                                 --pretrained_weight_path '<project_path>/RemoteSensing/pretrained_weight/vssm_tiny_0230_ckpt_epoch_262.pth'
                                  --resume '<saved_model_path>/[your_trained_model].pth'
 ```
 
@@ -356,11 +356,11 @@ Based on peers' questions from issue, here's a quick and easy navigate list of s
 
 | Issue | Solution | 
 | :---: | :---: | 
-| Issues about SECOND dataset | Please refer to Issue [#13](https://github.com/ChenHongruixuan/MambaCD/issues/13) / [#22](https://github.com/ChenHongruixuan/MambaCD/issues/22) / [#45](https://github.com/ChenHongruixuan/MambaCD/issues/45) |
+| Issues about SECOND dataset | Please refer to Issue [#13](https://github.com/ChenHongruixuan/RemoteSensing/issues/13) / [#22](https://github.com/ChenHongruixuan/RemoteSensing/issues/22) / [#45](https://github.com/ChenHongruixuan/RemoteSensing/issues/45) |
 | CUDA out of memory issue | Please lower the batch size of training and evalution  |
-| Modify the model structure| Please refere to Issue [#44](https://github.com/ChenHongruixuan/MambaCD/issues/44)  |
-NameError: name 'selective_scan_cuda_oflex' is not defined | Please refer to Issue [#9](https://github.com/ChenHongruixuan/MambaCD/issues/9)
-| Question about the relationship between iteration, epoch & batch size | Please refere to Issue [#32](https://github.com/ChenHongruixuan/MambaCD/issues/32) / [#48](https://github.com/ChenHongruixuan/MambaCD/issues/48)  |
+| Modify the model structure| Please refere to Issue [#44](https://github.com/ChenHongruixuan/RemoteSensing/issues/44)  |
+NameError: name 'selective_scan_cuda_oflex' is not defined | Please refer to Issue [#9](https://github.com/ChenHongruixuan/RemoteSensing/issues/9)
+| Question about the relationship between iteration, epoch & batch size | Please refere to Issue [#32](https://github.com/ChenHongruixuan/RemoteSensing/issues/32) / [#48](https://github.com/ChenHongruixuan/RemoteSensing/issues/48)  |
 
 
 ## 📜Reference

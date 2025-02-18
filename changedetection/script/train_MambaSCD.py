@@ -8,7 +8,7 @@ import time
 
 import numpy as np
 
-from MambaCD.changedetection.configs.config import get_config
+from RemoteSensing.changedetection.configs.config import get_config
 
 import torch
 import torch.nn.functional as F
@@ -16,12 +16,12 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from pytorch_msssim import SSIM
 from tqdm import tqdm
-from MambaCD.changedetection.datasets.make_data_loader import SemanticChangeDetectionDatset, make_data_loader
-from MambaCD.changedetection.utils_func.metrics import Evaluator
-from MambaCD.changedetection.models.STMambaSCD import STMambaSCD
-import MambaCD.changedetection.utils_func.lovasz_loss as L
+from RemoteSensing.changedetection.datasets.make_data_loader import SemanticChangeDetectionDatset, make_data_loader
+from RemoteSensing.changedetection.utils_func.metrics import Evaluator
+from RemoteSensing.changedetection.models.STMambaSCD import STMambaSCD
+import RemoteSensing.changedetection.utils_func.lovasz_loss as L
 from torch.optim.lr_scheduler import StepLR
-from MambaCD.changedetection.utils_func.mcd_utils import accuracy, SCDD_eval_all, AverageMeter
+from RemoteSensing.changedetection.utils_func.mcd_utils import accuracy, SCDD_eval_all, AverageMeter
 
 from ChangeDetection.CDlib.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass
 
@@ -245,7 +245,7 @@ class Trainer(object):
 
 def main():
     parser = argparse.ArgumentParser(description="Training on SECOND dataset")
-    parser.add_argument('--cfg', type=str, default='/home/songjian/project/MambaCD/VMamba/classification/configs/vssm1/vssm_base_224.yaml')
+    parser.add_argument('--cfg', type=str, default='/home/songjian/project/RemoteSensing/VMamba/classification/configs/vssm1/vssm_base_224.yaml')
     parser.add_argument(
         "--opts",
         help="Modify config options by adding 'KEY VALUE' pairs. ",

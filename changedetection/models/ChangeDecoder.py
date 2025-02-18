@@ -1,10 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from MambaCD.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
-from ChangeDetection.ConvMamba import Conv1DMamba, Conv1DMamba_v2
-
-SELECTED_MODEL = Conv1DMamba_v2
+from RemoteSensing.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
+from RemoteSensing.changedetection.models.ResBlockSe import ResBlock, SqueezeExcitation
 
 class ChangeDecoder(nn.Module):
     def __init__(self, encoder_dims, channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs):
@@ -19,14 +17,6 @@ class ChangeDecoder(nn.Module):
                 ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
                 forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
-            # SELECTED_MODEL(
-            #     in_channels=128,
-            #     norm_layer=norm_layer,
-            #     channel_first=channel_first,
-            #     ssm_act_layer=ssm_act_layer,
-            #     mlp_act_layer=mlp_act_layer,
-            #     **kwargs
-            # ),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
         self.st_block_42 = nn.Sequential(
@@ -37,14 +27,6 @@ class ChangeDecoder(nn.Module):
                 ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
                 forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
-            # SELECTED_MODEL(
-            #     in_channels=128,
-            #     norm_layer=norm_layer,
-            #     channel_first=channel_first,
-            #     ssm_act_layer=ssm_act_layer,
-            #     mlp_act_layer=mlp_act_layer,
-            #     **kwargs
-            # ),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
 
         )
@@ -56,14 +38,6 @@ class ChangeDecoder(nn.Module):
                 ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
                 forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
-            # SELECTED_MODEL(
-            #     in_channels=128,
-            #     norm_layer=norm_layer,
-            #     channel_first=channel_first,
-            #     ssm_act_layer=ssm_act_layer,
-            #     mlp_act_layer=mlp_act_layer,
-            #     **kwargs
-            # ),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
 
@@ -75,14 +49,6 @@ class ChangeDecoder(nn.Module):
                 ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
                 forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
-            # SELECTED_MODEL(
-            #     in_channels=128,
-            #     norm_layer=norm_layer,
-            #     channel_first=channel_first,
-            #     ssm_act_layer=ssm_act_layer,
-            #     mlp_act_layer=mlp_act_layer,
-            #     **kwargs
-            # ),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
         self.st_block_32 = nn.Sequential(
@@ -93,14 +59,6 @@ class ChangeDecoder(nn.Module):
                 ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
                 forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
-            # SELECTED_MODEL(
-            #     in_channels=128,
-            #     norm_layer=norm_layer,
-            #     channel_first=channel_first,
-            #     ssm_act_layer=ssm_act_layer,
-            #     mlp_act_layer=mlp_act_layer,
-            #     **kwargs
-            # ),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
         self.st_block_33 = nn.Sequential(
@@ -111,14 +69,6 @@ class ChangeDecoder(nn.Module):
                 ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
                 forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
-            # SELECTED_MODEL(
-            #     in_channels=128,
-            #     norm_layer=norm_layer,
-            #     channel_first=channel_first,
-            #     ssm_act_layer=ssm_act_layer,
-            #     mlp_act_layer=mlp_act_layer,
-            #     **kwargs
-            # ),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
 
@@ -130,14 +80,6 @@ class ChangeDecoder(nn.Module):
                 ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
                 forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
-            # SELECTED_MODEL(
-            #     in_channels=128,
-            #     norm_layer=norm_layer,
-            #     channel_first=channel_first,
-            #     ssm_act_layer=ssm_act_layer,
-            #     mlp_act_layer=mlp_act_layer,
-            #     **kwargs
-            # ),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
         self.st_block_22 = nn.Sequential(
@@ -148,14 +90,6 @@ class ChangeDecoder(nn.Module):
                 ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
                 forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
-            # SELECTED_MODEL(
-            #     in_channels=128,
-            #     norm_layer=norm_layer,
-            #     channel_first=channel_first,
-            #     ssm_act_layer=ssm_act_layer,
-            #     mlp_act_layer=mlp_act_layer,
-            #     **kwargs
-            # ),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
         self.st_block_23 = nn.Sequential(
@@ -166,14 +100,6 @@ class ChangeDecoder(nn.Module):
                 ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
                 forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
-            # SELECTED_MODEL(
-            #     in_channels=128,
-            #     norm_layer=norm_layer,
-            #     channel_first=channel_first,
-            #     ssm_act_layer=ssm_act_layer,
-            #     mlp_act_layer=mlp_act_layer,
-            #     **kwargs
-            # ),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
 
@@ -185,14 +111,6 @@ class ChangeDecoder(nn.Module):
                 ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
                 forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
-            # SELECTED_MODEL(
-            #     in_channels=128,
-            #     norm_layer=norm_layer,
-            #     channel_first=channel_first,
-            #     ssm_act_layer=ssm_act_layer,
-            #     mlp_act_layer=mlp_act_layer,
-            #     **kwargs
-            # ),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
         self.st_block_12 = nn.Sequential(
@@ -203,14 +121,6 @@ class ChangeDecoder(nn.Module):
                 ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
                 forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
-            # SELECTED_MODEL(
-            #     in_channels=128,
-            #     norm_layer=norm_layer,
-            #     channel_first=channel_first,
-            #     ssm_act_layer=ssm_act_layer,
-            #     mlp_act_layer=mlp_act_layer,
-            #     **kwargs
-            # ),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
         self.st_block_13 = nn.Sequential(
@@ -221,14 +131,6 @@ class ChangeDecoder(nn.Module):
                 ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
                 forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
-            # SELECTED_MODEL(
-            #     in_channels=128,
-            #     norm_layer=norm_layer,
-            #     channel_first=channel_first,
-            #     ssm_act_layer=ssm_act_layer,
-            #     mlp_act_layer=mlp_act_layer,
-            #     **kwargs
-            # ),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
 
@@ -355,53 +257,3 @@ class ChangeDecoder(nn.Module):
         p1 = self.smooth_layer_1(p1)
 
         return p1
-
-   
-class ResBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, stride=1, downsample=None):
-        super(ResBlock, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(out_channels)
-        self.relu = nn.ReLU(inplace=True)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(out_channels)
-        self.downsample = downsample
-
-        self.se = SqueezeExcitation(out_channels)
-
-    def forward(self, x):
-        identity = x
-
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
-
-        out = self.conv2(out)
-        out = self.bn2(out)
-
-        out = self.se(out)
-
-        if self.downsample is not None:
-            identity = self.downsample(x)
-
-        out += identity
-        out = self.relu(out)
-
-        return out
-    
-class SqueezeExcitation(nn.Module):
-    def __init__(self, channels, reduction_ratio=16):
-        super().__init__()
-        self.squeeze = nn.AdaptiveAvgPool2d(1)
-        self.excitation = nn.Sequential(
-            nn.Linear(channels, channels // reduction_ratio),
-            nn.ReLU(inplace=True),
-            nn.Linear(channels // reduction_ratio, channels),
-            nn.Sigmoid()
-        )
-
-    def forward(self, x):
-        b, c, _, _ = x.size()
-        y = self.squeeze(x).view(b, c)
-        y = self.excitation(y).view(b, c, 1, 1)
-        return x * y.expand_as(x)

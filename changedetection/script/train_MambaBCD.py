@@ -8,18 +8,18 @@ import time
 
 import numpy as np
 
-from MambaCD.changedetection.configs.config import get_config
+from RemoteSensing.changedetection.configs.config import get_config
 
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from MambaCD.changedetection.datasets.make_data_loader import ChangeDetectionDatset, make_data_loader
-from MambaCD.changedetection.utils_func.metrics import Evaluator
-from MambaCD.changedetection.models.MambaBCD import STMambaBCD
+from RemoteSensing.changedetection.datasets.make_data_loader import ChangeDetectionDatset, make_data_loader
+from RemoteSensing.changedetection.utils_func.metrics import Evaluator
+from RemoteSensing.changedetection.models.MambaBCD import STMambaBCD
 
-import MambaCD.changedetection.utils_func.lovasz_loss as L
+import RemoteSensing.changedetection.utils_func.lovasz_loss as L
 
 from ChangeDetection.CDlib.loss import ce2_dice1
 from torch.utils.tensorboard import SummaryWriter
@@ -184,7 +184,7 @@ class Trainer(object):
 
 def main():
     parser = argparse.ArgumentParser(description="Training on SYSU/LEVIR-CD+/WHU-CD dataset")
-    parser.add_argument('--cfg', type=str, default='/home/songjian/project/MambaCD/VMamba/classification/configs/vssm1/vssm_base_224.yaml')
+    parser.add_argument('--cfg', type=str, default='/home/songjian/project/RemoteSensing/VMamba/classification/configs/vssm1/vssm_base_224.yaml')
     parser.add_argument(
         "--opts",
         help="Modify config options by adding 'KEY VALUE' pairs. ",
