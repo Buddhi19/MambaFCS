@@ -24,19 +24,28 @@ class MambaGF(nn.Module):
             gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']
         )
 
+        self._LAYER_NORM_1 = nn.LayerNorm(kwargs['hidden_dim'])
+        self._LAYER_NORM_2 = nn.LayerNorm(kwargs['hidden_dim'])
+
         self.cross_attention = nn.MultiheadAttention(embed_dim=kwargs['hidden_dim'], num_heads=kwargs['num_heads'])
 
         self.SIGMOID = nn.Sigmoid()
 
     def forward(self, pre_feature, post_feature):
+        ori_pre_feature = pre_feature
+        ori_post_feature = post_feature
+
         pre_feature = self.vssm_T1(pre_feature)
         post_feature = self.vssm_T2(post_feature)
+
+        pre_feature = self._LAYER_NORM_1(pre_feature)
+        post_feature = self._LAYER_NORM_2(post_feature)
 
         pre_feature = pre_feature.flatten(2).permute(2, 0, 1)  # (N, C, H, W) -> (HW, N, C)
         post_feature = post_feature.flatten(2).permute(2, 0, 1)  # (N, C, H, W) -> (HW, N, C)
 
         attn_output, _ = self.cross_attention(pre_feature, post_feature, post_feature)
-        attn_output = attn_output.permute(1, 2, 0).view_as(pre_feature)  # (HW, N, C) -> (N, C, H, W)
+        attn_output = attn_output.permute(1, 2, 0).view_as(ori_pre_feature)  # (HW, N, C) -> (N, C, H, W)
 
         guided_feature = pre_feature * self.SIGMOID(attn_output)
         return guided_feature
