@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from RemoteSensing.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
 from RemoteSensing.changedetection.models.ResBlockSe import ResBlock, SqueezeExcitation
-from RemoteSensing.changedetection.model.GuidedFusion import MambaGF
+from RemoteSensing.changedetection.models.GuidedFusion import MambaGF
 
 class ChangeDecoder(nn.Module):
     def __init__(self, encoder_dims, channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs):
@@ -154,10 +154,10 @@ class ChangeDecoder(nn.Module):
         self.smooth_layer_2 = ResBlock(in_channels=128, out_channels=128, stride=1) 
         self.smooth_layer_1 = ResBlock(in_channels=128, out_channels=128, stride=1) 
 
-        self.GuidedFusion_1 = MambaGF(**kwargs)
-        self.GuidedFusion_2 = MambaGF(**kwargs)
-        self.GuidedFusion_3 = MambaGF(**kwargs)
-        self.GuidedFusion_4 = MambaGF(**kwargs)
+        self.GuidedFusion_1 = MambaGF(encoder_dims[-1], channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs)
+        self.GuidedFusion_2 = MambaGF(encoder_dims[-2], channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs)
+        self.GuidedFusion_3 = MambaGF(encoder_dims[-3], channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs)
+        self.GuidedFusion_4 = MambaGF(encoder_dims[-4], channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs)
     
     def _upsample_add(self, x, y):
         _, _, H, W = y.size()
@@ -173,8 +173,8 @@ class ChangeDecoder(nn.Module):
             Stage I
             Changes : pre_feat_i-> pre_feat_i+post_feat_i, post_feat_i -> post_feat_i-pre_feat_i
         '''
-        Guided_Feature_1 = self.GuidedFusion_1(pre_feat_1, post_feat_1)
-        p41 = self.st_block_41(Guided_Feature_1, dim=1)
+        Guided_Feature_4 = self.GuidedFusion_1(pre_feat_4, post_feat_4)
+        p41 = self.st_block_41(Guided_Feature_4)
         B, C, H, W = pre_feat_4.size()
         # Create an empty tensor of the correct shape (B, C, H, 2*W)
         ct_tensor_42 = torch.empty(B, C, H, 2*W).cuda()
@@ -194,9 +194,8 @@ class ChangeDecoder(nn.Module):
         '''
             Stage II
         '''
-        IN_FEAT3_1 = pre_feat_3 + post_feat_3
-        IN_FEAT3_2 = post_feat_3 - pre_feat_3
-        p31 = self.st_block_31(torch.cat([IN_FEAT3_1,IN_FEAT3_2], dim=1))
+        Guided_Feature_3 = self.GuidedFusion_2(pre_feat_3, post_feat_3)
+        p31 = self.st_block_31(Guided_Feature_3)
         B, C, H, W = pre_feat_3.size()
         # Create an empty tensor of the correct shape (B, C, H, 2*W)
         ct_tensor_32 = torch.empty(B, C, H, 2*W).cuda()
@@ -217,9 +216,8 @@ class ChangeDecoder(nn.Module):
         '''
             Stage III
         '''
-        IN_FEAT2_1 = pre_feat_2 + post_feat_2
-        IN_FEAT2_2 = post_feat_2 - pre_feat_2
-        p21 = self.st_block_21(torch.cat([IN_FEAT2_1, IN_FEAT2_2], dim=1))
+        Guided_Feature_2 = self.GuidedFusion_3(pre_feat_2, post_feat_2)
+        p21 = self.st_block_21(Guided_Feature_2)
         B, C, H, W = pre_feat_2.size()
         # Create an empty tensor of the correct shape (B, C, H, 2*W)
         ct_tensor_22 = torch.empty(B, C, H, 2*W).cuda()
@@ -240,9 +238,8 @@ class ChangeDecoder(nn.Module):
         '''
             Stage IV
         '''
-        IN_FEAT1_1 = pre_feat_1 + post_feat_1
-        IN_FEAT1_2 = post_feat_1 - pre_feat_1
-        p11 = self.st_block_11(torch.cat([IN_FEAT1_1,IN_FEAT1_2], dim=1))
+        Guided_Feature_1 = self.GuidedFusion_4(pre_feat_1, post_feat_1)
+        p11 = self.st_block_11(Guided_Feature_1)
         B, C, H, W = pre_feat_1.size()
         # Create an empty tensor of the correct shape (B, C, H, 2*W)
         ct_tensor_12 = torch.empty(B, C, H, 2*W).cuda()
