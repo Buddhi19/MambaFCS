@@ -29,26 +29,32 @@ class MambaGF(nn.Module):
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
+        
+        self.diff_conv = nn.Sequential(
+            nn.Conv2d(in_channels, in_channels, 3, padding=1),
+            nn.ReLU(),
+            nn.BatchNorm2d(in_channels)
+        )
+        self.attn = nn.Sequential(
+            nn.Conv2d(in_channels*2, 1, 1),
+            nn.Sigmoid()
+        )
+        self.out_Layer = nn.Conv2d(in_channels*4, in_channels*2, 1)
 
-        self._BATCH_NORM_1 = nn.BatchNorm2d(128)
-        self._BATCH_NORM_2 = nn.BatchNorm2d(128)
+    def forward(self, pre, post):
+        # Basic concatenation
+        cat = torch.cat([pre, post], dim=1)
+        
+        # Difference features
+        diff = self.diff_conv(torch.abs(pre - post))
+        
+        # Attention-guided fusion
+        attn_map = self.attn(cat)
+        attn_fused = attn_map * pre + (1 - attn_map) * post
+        
+        # Final fusion
+        out = torch.cat([cat, diff, attn_fused], dim=1)
+        out = self.out_Layer(out)
+        return out
 
-        self.SIGMOID = nn.Sigmoid()
-
-        self.CONV = nn.Conv2d(kernel_size=1, in_channels=128, out_channels=in_channels*2)
-
-    def forward(self, pre_feature, post_feature):
-        ori_pre_feature = pre_feature
-        ori_post_feature = post_feature
-
-        pre_feature = self.vssm_T1(pre_feature)
-        post_feature = self.vssm_T2(post_feature)
-
-        pre_feature = self._BATCH_NORM_1(pre_feature)
-        post_feature = self._BATCH_NORM_2(post_feature)
-
-        post_feature = self.SIGMOID(post_feature)
-        guided_feature = torch.mul(pre_feature, post_feature)
-        guided_feature = self.CONV(guided_feature)
-
-        return guided_feature
+        
