@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from RemoteSensing.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
 from RemoteSensing.changedetection.models.ResBlockSe import ResBlock, SqueezeExcitation
-from RemoteSensing.changedetection.models.GuidedFusion import MambaGF
+from RemoteSensing.changedetection.models.GuidedFusion import MambaGF, iAFF
 
 class ChangeDecoder(nn.Module):
     def __init__(self, encoder_dims, channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs):
@@ -11,7 +11,7 @@ class ChangeDecoder(nn.Module):
 
         # Define the VSS Block for Spatio-temporal relationship modelling
         self.st_block_41 = nn.Sequential(
-            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-1] * 2, out_channels=128),
+            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-1], out_channels=128),
             Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
             VSSBlock(hidden_dim=128, drop_path=0.1, norm_layer=norm_layer, channel_first=channel_first,
                 ssm_d_state=kwargs['ssm_d_state'], ssm_ratio=kwargs['ssm_ratio'], ssm_dt_rank=kwargs['ssm_dt_rank'], ssm_act_layer=ssm_act_layer,
@@ -43,7 +43,7 @@ class ChangeDecoder(nn.Module):
         )
 
         self.st_block_31 = nn.Sequential(
-            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-2] * 2, out_channels=128),
+            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-2], out_channels=128),
             Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
             VSSBlock(hidden_dim=128, drop_path=0.1, norm_layer=norm_layer, channel_first=channel_first,
                 ssm_d_state=kwargs['ssm_d_state'], ssm_ratio=kwargs['ssm_ratio'], ssm_dt_rank=kwargs['ssm_dt_rank'], ssm_act_layer=ssm_act_layer,
@@ -74,7 +74,7 @@ class ChangeDecoder(nn.Module):
         )
 
         self.st_block_21 = nn.Sequential(
-            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-3] * 2, out_channels=128),
+            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-3], out_channels=128),
             Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
             VSSBlock(hidden_dim=128, drop_path=0.1, norm_layer=norm_layer, channel_first=channel_first,
                 ssm_d_state=kwargs['ssm_d_state'], ssm_ratio=kwargs['ssm_ratio'], ssm_dt_rank=kwargs['ssm_dt_rank'], ssm_act_layer=ssm_act_layer,
@@ -105,7 +105,7 @@ class ChangeDecoder(nn.Module):
         )
 
         self.st_block_11 = nn.Sequential(
-            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-4] * 2, out_channels=128),
+            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-4], out_channels=128),
             Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
             VSSBlock(hidden_dim=128, drop_path=0.1, norm_layer=norm_layer, channel_first=channel_first,
                 ssm_d_state=kwargs['ssm_d_state'], ssm_ratio=kwargs['ssm_ratio'], ssm_dt_rank=kwargs['ssm_dt_rank'], ssm_act_layer=ssm_act_layer,
@@ -154,10 +154,15 @@ class ChangeDecoder(nn.Module):
         self.smooth_layer_2 = ResBlock(in_channels=128, out_channels=128, stride=1) 
         self.smooth_layer_1 = ResBlock(in_channels=128, out_channels=128, stride=1) 
 
-        self.GuidedFusion_1 = MambaGF(encoder_dims[-1], channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs)
-        self.GuidedFusion_2 = MambaGF(encoder_dims[-2], channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs)
-        self.GuidedFusion_3 = MambaGF(encoder_dims[-3], channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs)
-        self.GuidedFusion_4 = MambaGF(encoder_dims[-4], channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs)
+        self.GuidedFusion_1 = iAFF(encoder_dims[-1])
+        self.GuidedFusion_2 = iAFF(encoder_dims[-2])
+        self.GuidedFusion_3 = iAFF(encoder_dims[-3])
+        self.GuidedFusion_4 = iAFF(encoder_dims[-4])
+
+        self.Fusion_1 = MambaGF(128)
+        self.Fusion_2 = MambaGF(128)
+        self.Fusion_3 = MambaGF(128)
+        self.Fusion_4 = MambaGF(128)
     
     def _upsample_add(self, x, y):
         _, _, H, W = y.size()
@@ -171,7 +176,6 @@ class ChangeDecoder(nn.Module):
 
         '''
             Stage I
-            Changes : pre_feat_i-> pre_feat_i+post_feat_i, post_feat_i -> post_feat_i-pre_feat_i
         '''
         Guided_Feature_4 = self.GuidedFusion_1(pre_feat_4, post_feat_4)
         p41 = self.st_block_41(Guided_Feature_4)
@@ -188,9 +192,9 @@ class ChangeDecoder(nn.Module):
         ct_tensor_43[:, :, :, W:] = post_feat_4
         p43 = self.st_block_43(ct_tensor_43)
 
-        p4 = self.fuse_layer_4(torch.cat([p41, p42[:, :, :, ::2], p42[:, :, :, 1::2], p43[:, :, :, 0:W], p43[:, :, :, W:]], dim=1))
-       
-
+        p4 = self.Fusion_4(
+            p41, p42[:, :, :, ::2], p42[:, :, :, 1::2], p43[:, :, :, 0:W], p43[:, :, :, W:]
+        )
         '''
             Stage II
         '''
@@ -209,7 +213,9 @@ class ChangeDecoder(nn.Module):
         ct_tensor_33[:, :, :, W:] = post_feat_3
         p33 = self.st_block_33(ct_tensor_33)
 
-        p3 = self.fuse_layer_3(torch.cat([p31, p32[:, :, :, ::2], p32[:, :, :, 1::2], p33[:, :, :, 0:W], p33[:, :, :, W:]], dim=1))
+        p3 = self.Fusion_3(
+            p31, p32[:, :, :, ::2], p32[:, :, :, 1::2], p33[:, :, :, 0:W], p33[:, :, :, W:]
+        )
         p3 = self._upsample_add(p4, p3)
         p3 = self.smooth_layer_3(p3)
        
@@ -231,7 +237,9 @@ class ChangeDecoder(nn.Module):
         ct_tensor_23[:, :, :, W:] = post_feat_2
         p23 = self.st_block_23(ct_tensor_23)
 
-        p2 = self.fuse_layer_2(torch.cat([p21, p22[:, :, :, ::2], p22[:, :, :, 1::2], p23[:, :, :, 0:W], p23[:, :, :, W:]], dim=1))
+        p2 = self.Fusion_2(
+            p21, p22[:, :, :, ::2], p22[:, :, :, 1::2], p23[:, :, :, 0:W], p23[:, :, :, W:]
+        )
         p2 = self._upsample_add(p3, p2)
         p2 = self.smooth_layer_2(p2)
        
@@ -253,8 +261,9 @@ class ChangeDecoder(nn.Module):
         ct_tensor_13[:, :, :, W:] = post_feat_1
         p13 = self.st_block_13(ct_tensor_13)
 
-        p1 = self.fuse_layer_1(torch.cat([p11, p12[:, :, :, ::2], p12[:, :, :, 1::2], p13[:, :, :, 0:W], p13[:, :, :, W:]], dim=1))
-
+        p1 = self.Fusion_1(
+            p11, p12[:, :, :, ::2], p12[:, :, :, 1::2], p13[:, :, :, 0:W], p13[:, :, :, W:]
+        )
         p1 = self._upsample_add(p2, p1)
         p1 = self.smooth_layer_1(p1)
 

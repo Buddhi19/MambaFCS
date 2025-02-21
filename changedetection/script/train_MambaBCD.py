@@ -111,35 +111,25 @@ class Trainer(object):
             ce_loss_1 = ce2_dice1(output_1, labels)
             lovasz_loss = L.lovasz_softmax(F.softmax(output_1, dim=1), labels, ignore=255)
             
-            # alpha = max(1.75 - (itera / 16000) * 1.0, 1.0)  # Gradually decrease weight
-            # lovasz_weight = min(0.75, itera / 16000)  # Gradually increase Lovász weight
 
-            alpha = 1.0
-            lovasz_weight = 0.75
-
-            if (itera + 1) > 16000:
-                alpha = 0.75
-                lovasz_weight = 1.5
-
-            main_loss = alpha * ce_loss_1 + lovasz_weight * lovasz_loss
-            final_loss = main_loss
+            final_loss = ce_loss_1 + 0.5*lovasz_loss
 
             final_loss.backward()
             self.optim.step()
 
-            self.writer.add_scalar('Loss/train', final_loss.item(), itera + 1)
+            self.writer.add_scalar('CDLoss/train', final_loss.item(), itera + 1)
 
             if (itera + 1) % 10 == 0:
                 print(f'iter is {itera + 1}, overall loss is {final_loss}')
                 if (itera + 1) % 500 == 0:
                     self.deep_model.eval()
                     rec, pre, oa, f1_score, iou, kc = self.validation()
-                    self.writer.add_scalar('Metrics/Recall', rec, itera + 1)
-                    self.writer.add_scalar('Metrics/Precision', pre, itera + 1)
-                    self.writer.add_scalar('Metrics/OA', oa, itera + 1)
-                    self.writer.add_scalar('Metrics/F1_score', f1_score, itera + 1)
-                    self.writer.add_scalar('Metrics/IoU', iou, itera + 1)
-                    self.writer.add_scalar('Metrics/Kappa', kc, itera + 1)
+                    self.writer.add_scalar('CDMetrics/Recall', rec, itera + 1)
+                    self.writer.add_scalar('CDMetrics/Precision', pre, itera + 1)
+                    self.writer.add_scalar('CDMetrics/OA', oa, itera + 1)
+                    self.writer.add_scalar('CDMetrics/F1_score', f1_score, itera + 1)
+                    self.writer.add_scalar('CDMetrics/IoU', iou, itera + 1)
+                    self.writer.add_scalar('CDMetrics/Kappa', kc, itera + 1)
                     if kc > best_kc:
                         torch.save(self.deep_model.state_dict(),
                                    os.path.join(self.model_save_path, f'{itera + 1}_model.pth'))
