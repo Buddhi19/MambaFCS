@@ -130,7 +130,7 @@ class Trainer(object):
                     self.writer.add_scalar('CDMetrics/F1_score', f1_score, itera + 1)
                     self.writer.add_scalar('CDMetrics/IoU', iou, itera + 1)
                     self.writer.add_scalar('CDMetrics/Kappa', kc, itera + 1)
-                    if kc > best_kc:
+                    if kc > best_kc and oa> 0.92:
                         torch.save(self.deep_model.state_dict(),
                                    os.path.join(self.model_save_path, f'{itera + 1}_model.pth'))
                         best_kc = kc
@@ -144,7 +144,7 @@ class Trainer(object):
         print('---------starting evaluation-----------')
         self.evaluator.reset()
         dataset = ChangeDetectionDatset(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
-        val_data_loader = DataLoader(dataset, batch_size=1, num_workers=4, drop_last=False)
+        val_data_loader = DataLoader(dataset, batch_size=self.args.batch_size, num_workers=4, drop_last=False)
         torch.cuda.empty_cache()
         
         with torch.no_grad():

@@ -11,7 +11,7 @@ class ChangeDecoder(nn.Module):
 
         # Define the VSS Block for Spatio-temporal relationship modelling
         self.st_block_41 = nn.Sequential(
-            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-1], out_channels=128),
+            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-1]*2, out_channels=128),
             Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
             VSSBlock(hidden_dim=128, drop_path=0.1, norm_layer=norm_layer, channel_first=channel_first,
                 ssm_d_state=kwargs['ssm_d_state'], ssm_ratio=kwargs['ssm_ratio'], ssm_dt_rank=kwargs['ssm_dt_rank'], ssm_act_layer=ssm_act_layer,
@@ -41,9 +41,19 @@ class ChangeDecoder(nn.Module):
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
+        self.st_block_44 = nn.Sequential(
+            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-1]*2, out_channels=128),
+            Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
+            VSSBlock(hidden_dim=128, drop_path=0.1, norm_layer=norm_layer, channel_first=channel_first,
+                ssm_d_state=kwargs['ssm_d_state'], ssm_ratio=kwargs['ssm_ratio'], ssm_dt_rank=kwargs['ssm_dt_rank'], ssm_act_layer=ssm_act_layer,
+                ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
+                forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
+                gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
+            Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
+        )
 
         self.st_block_31 = nn.Sequential(
-            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-2], out_channels=128),
+            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-2]*2, out_channels=128),
             Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
             VSSBlock(hidden_dim=128, drop_path=0.1, norm_layer=norm_layer, channel_first=channel_first,
                 ssm_d_state=kwargs['ssm_d_state'], ssm_ratio=kwargs['ssm_ratio'], ssm_dt_rank=kwargs['ssm_dt_rank'], ssm_act_layer=ssm_act_layer,
@@ -72,9 +82,19 @@ class ChangeDecoder(nn.Module):
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
+        self.st_block_35 = nn.Sequential(
+            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-2]*2, out_channels=128),
+            Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
+            VSSBlock(hidden_dim=128, drop_path=0.1, norm_layer=norm_layer, channel_first=channel_first,
+                ssm_d_state=kwargs['ssm_d_state'], ssm_ratio=kwargs['ssm_ratio'], ssm_dt_rank=kwargs['ssm_dt_rank'], ssm_act_layer=ssm_act_layer,
+                ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
+                forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
+                gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
+            Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
+        )
 
         self.st_block_21 = nn.Sequential(
-            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-3], out_channels=128),
+            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-3]*2, out_channels=128),
             Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
             VSSBlock(hidden_dim=128, drop_path=0.1, norm_layer=norm_layer, channel_first=channel_first,
                 ssm_d_state=kwargs['ssm_d_state'], ssm_ratio=kwargs['ssm_ratio'], ssm_dt_rank=kwargs['ssm_dt_rank'], ssm_act_layer=ssm_act_layer,
@@ -103,9 +123,19 @@ class ChangeDecoder(nn.Module):
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
+        self.st_block_25 = nn.Sequential(
+            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-3]*2, out_channels=128),
+            Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
+            VSSBlock(hidden_dim=128, drop_path=0.1, norm_layer=norm_layer, channel_first=channel_first,
+                ssm_d_state=kwargs['ssm_d_state'], ssm_ratio=kwargs['ssm_ratio'], ssm_dt_rank=kwargs['ssm_dt_rank'], ssm_act_layer=ssm_act_layer,
+                ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
+                forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
+                gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
+            Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
+        )
 
         self.st_block_11 = nn.Sequential(
-            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-4], out_channels=128),
+            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-4]*2, out_channels=128),
             Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
             VSSBlock(hidden_dim=128, drop_path=0.1, norm_layer=norm_layer, channel_first=channel_first,
                 ssm_d_state=kwargs['ssm_d_state'], ssm_ratio=kwargs['ssm_ratio'], ssm_dt_rank=kwargs['ssm_dt_rank'], ssm_act_layer=ssm_act_layer,
@@ -134,6 +164,16 @@ class ChangeDecoder(nn.Module):
                 gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
+        self.st_block_15 = nn.Sequential(
+            nn.Conv2d(kernel_size=1, in_channels=encoder_dims[-4]*2, out_channels=128),
+            Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
+            VSSBlock(hidden_dim=128, drop_path=0.1, norm_layer=norm_layer, channel_first=channel_first,
+                ssm_d_state=kwargs['ssm_d_state'], ssm_ratio=kwargs['ssm_ratio'], ssm_dt_rank=kwargs['ssm_dt_rank'], ssm_act_layer=ssm_act_layer,
+                ssm_conv=kwargs['ssm_conv'], ssm_conv_bias=kwargs['ssm_conv_bias'], ssm_drop_rate=kwargs['ssm_drop_rate'], ssm_init=kwargs['ssm_init'],
+                forward_type=kwargs['forward_type'], mlp_ratio=kwargs['mlp_ratio'], mlp_act_layer=mlp_act_layer, mlp_drop_rate=kwargs['mlp_drop_rate'],
+                gmlp=kwargs['gmlp'], use_checkpoint=kwargs['use_checkpoint']),
+            Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
+        )
 
         # Fuse layer  
         self.fuse_layer_4 = nn.Sequential(nn.Conv2d(kernel_size=1, in_channels=128 * 5, out_channels=128),
@@ -154,11 +194,6 @@ class ChangeDecoder(nn.Module):
         self.smooth_layer_2 = ResBlock(in_channels=128, out_channels=128, stride=1) 
         self.smooth_layer_1 = ResBlock(in_channels=128, out_channels=128, stride=1) 
 
-        self.GuidedFusion_1 = iAFF(encoder_dims[-1])
-        self.GuidedFusion_2 = iAFF(encoder_dims[-2])
-        self.GuidedFusion_3 = iAFF(encoder_dims[-3])
-        self.GuidedFusion_4 = iAFF(encoder_dims[-4])
-
         self.Fusion_1 = MambaGF(128)
         self.Fusion_2 = MambaGF(128)
         self.Fusion_3 = MambaGF(128)
@@ -177,9 +212,13 @@ class ChangeDecoder(nn.Module):
         '''
             Stage I
         '''
-        Guided_Feature_4 = self.GuidedFusion_1(pre_feat_4, post_feat_4)
-        p41 = self.st_block_41(Guided_Feature_4)
+        p41 = self.st_block_41(torch.cat((pre_feat_4, post_feat_4), dim=1))
         B, C, H, W = pre_feat_4.size()
+        ct_tensor_41 = torch.empty(B, 2*C, H, W).cuda()
+        ct_tensor_41[:, ::2, :, :] = pre_feat_4
+        ct_tensor_41[:, 1::2, :, :] = post_feat_4
+        p45 = self.st_block_44(ct_tensor_41)
+
         # Create an empty tensor of the correct shape (B, C, H, 2*W)
         ct_tensor_42 = torch.empty(B, C, H, 2*W).cuda()
         # Fill in odd columns with A and even columns with B
@@ -193,14 +232,18 @@ class ChangeDecoder(nn.Module):
         p43 = self.st_block_43(ct_tensor_43)
 
         p4 = self.Fusion_4(
-            p41, p42[:, :, :, ::2], p42[:, :, :, 1::2], p43[:, :, :, 0:W], p43[:, :, :, W:]
+            p41, p45, p42[:, :, :, ::2], p43[:, :, :, 1::2], p42[:, :, :, 0:W], p43[:, :, :, W:]
         )
         '''
             Stage II
         '''
-        Guided_Feature_3 = self.GuidedFusion_2(pre_feat_3, post_feat_3)
-        p31 = self.st_block_31(Guided_Feature_3)
+        p31 = self.st_block_31(torch.cat((pre_feat_3, post_feat_3), dim=1))
         B, C, H, W = pre_feat_3.size()
+        ct_tensor_31 = torch.empty(B, 2*C, H, W).cuda()
+        ct_tensor_31[:, ::2, :, :] = pre_feat_3
+        ct_tensor_31[:, 1::2, :, :] = post_feat_3
+        p35 = self.st_block_35(ct_tensor_31)
+
         # Create an empty tensor of the correct shape (B, C, H, 2*W)
         ct_tensor_32 = torch.empty(B, C, H, 2*W).cuda()
         # Fill in odd columns with A and even columns with B
@@ -214,7 +257,7 @@ class ChangeDecoder(nn.Module):
         p33 = self.st_block_33(ct_tensor_33)
 
         p3 = self.Fusion_3(
-            p31, p32[:, :, :, ::2], p32[:, :, :, 1::2], p33[:, :, :, 0:W], p33[:, :, :, W:]
+            p31, p35, p32[:, :, :, ::2], p33[:, :, :, 1::2], p32[:, :, :, 0:W], p33[:, :, :, W:]
         )
         p3 = self._upsample_add(p4, p3)
         p3 = self.smooth_layer_3(p3)
@@ -222,9 +265,13 @@ class ChangeDecoder(nn.Module):
         '''
             Stage III
         '''
-        Guided_Feature_2 = self.GuidedFusion_3(pre_feat_2, post_feat_2)
-        p21 = self.st_block_21(Guided_Feature_2)
+        p21 = self.st_block_21(torch.cat((pre_feat_2, post_feat_2), dim=1))
         B, C, H, W = pre_feat_2.size()
+        ct_tensor_21 = torch.empty(B, 2*C, H, W).cuda()
+        ct_tensor_21[:, ::2, :, :] = pre_feat_2
+        ct_tensor_21[:, 1::2, :, :] = post_feat_2
+        p25 = self.st_block_25(ct_tensor_21)
+
         # Create an empty tensor of the correct shape (B, C, H, 2*W)
         ct_tensor_22 = torch.empty(B, C, H, 2*W).cuda()
         # Fill in odd columns with A and even columns with B
@@ -238,7 +285,7 @@ class ChangeDecoder(nn.Module):
         p23 = self.st_block_23(ct_tensor_23)
 
         p2 = self.Fusion_2(
-            p21, p22[:, :, :, ::2], p22[:, :, :, 1::2], p23[:, :, :, 0:W], p23[:, :, :, W:]
+            p21, p25, p22[:, :, :, ::2], p23[:, :, :, 1::2], p22[:, :, :, 0:W], p23[:, :, :, W:]
         )
         p2 = self._upsample_add(p3, p2)
         p2 = self.smooth_layer_2(p2)
@@ -246,9 +293,13 @@ class ChangeDecoder(nn.Module):
         '''
             Stage IV
         '''
-        Guided_Feature_1 = self.GuidedFusion_4(pre_feat_1, post_feat_1)
-        p11 = self.st_block_11(Guided_Feature_1)
+        p11 = self.st_block_11(torch.cat((pre_feat_1, post_feat_1), dim=1))
         B, C, H, W = pre_feat_1.size()
+        ct_tensor_11 = torch.empty(B, 2*C, H, W).cuda()
+        ct_tensor_11[:, ::2, :, :] = pre_feat_1
+        ct_tensor_11[:, 1::2, :, :] = post_feat_1
+        p15 = self.st_block_15(ct_tensor_11)
+
         # Create an empty tensor of the correct shape (B, C, H, 2*W)
         ct_tensor_12 = torch.empty(B, C, H, 2*W).cuda()
         # Fill in odd columns with A and even columns with B
@@ -262,7 +313,7 @@ class ChangeDecoder(nn.Module):
         p13 = self.st_block_13(ct_tensor_13)
 
         p1 = self.Fusion_1(
-            p11, p12[:, :, :, ::2], p12[:, :, :, 1::2], p13[:, :, :, 0:W], p13[:, :, :, W:]
+            p11, p15, p12[:, :, :, ::2], p13[:, :, :, 1::2], p12[:, :, :, 0:W], p13[:, :, :, W:]
         )
         p1 = self._upsample_add(p2, p1)
         p1 = self.smooth_layer_1(p1)

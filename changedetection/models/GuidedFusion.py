@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from RemoteSensing.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
+from RemoteSensing.changedetection.models.ResBlockSe import SqueezeExcitation
 
 
 class MambaGF(nn.Module):
@@ -11,12 +12,23 @@ class MambaGF(nn.Module):
         self.Fusion_2 = iAFF(in_channels)
         self.Fusion_3 = iAFF(in_channels)
         self.Fusion_4 = iAFF(in_channels)
+        self.Fusion_5 = iAFF(in_channels)
 
-    def forward(self, x1, x2, x3, x4, x5):
-        x = self.Fusion_1(x1, x2)
-        x = self.Fusion_2(x, x3)
-        x = self.Fusion_3(x, x4)
-        x = self.Fusion_4(x, x5)
+        self.SE = SqueezeExcitation(128)
+        self.BatchNorm = nn.BatchNorm2d(in_channels)
+        self.Relu = nn.ReLU()
+
+    def forward(self, x1, x2, x3, x4, x5, x6):
+        x_1 = self.Fusion_1(x1, x2)
+        x_2 = self.Fusion_2(x3, x4)
+        x_3 = self.Fusion_3(x5, x6)
+
+        x_4 = self.Fusion_4(x_2,x_3)
+        x_5 = self.Fusion_5(x_1, x_4)
+
+        x = self.SE(x_5)
+        x = self.BatchNorm(x)
+        x = self.Relu(x)
         return x
 
 
