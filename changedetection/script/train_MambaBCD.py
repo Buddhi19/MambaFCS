@@ -65,8 +65,9 @@ class Trainer(object):
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
         self.deep_model = self.deep_model.cuda()
+        file_name = input()
         self.model_save_path = os.path.join(args.model_param_path, args.dataset,
-                                            args.model_type + '_' + str(time.time()))
+                                            args.model_type + file_name)
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 

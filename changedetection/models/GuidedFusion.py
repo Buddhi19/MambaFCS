@@ -9,24 +9,14 @@ class MambaGF(nn.Module):
     def __init__(self, in_channels):
         super(MambaGF, self).__init__()
         self.Fusion_1 = iAFF(in_channels)
-        self.Fusion_2 = iAFF(in_channels)
-        self.Fusion_3 = iAFF(in_channels)
-        self.Fusion_4 = iAFF(in_channels)
-        self.Fusion_5 = iAFF(in_channels)
 
-        self.SE = SqueezeExcitation(128)
+        self.SE = SqueezeExcitation(in_channels)
         self.BatchNorm = nn.BatchNorm2d(in_channels)
         self.Relu = nn.ReLU()
 
-    def forward(self, x1, x2, x3, x4, x5, x6):
+    def forward(self, x1, x2):
         x_1 = self.Fusion_1(x1, x2)
-        x_2 = self.Fusion_2(x3, x4)
-        x_3 = self.Fusion_3(x5, x6)
-
-        x_4 = self.Fusion_4(x_2,x_3)
-        x_5 = self.Fusion_5(x_1, x_4)
-
-        x = self.SE(x_5)
+        x = self.SE(x_1)
         x = self.BatchNorm(x)
         x = self.Relu(x)
         return x
