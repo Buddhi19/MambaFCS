@@ -14,7 +14,6 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from pytorch_msssim import SSIM
 from tqdm import tqdm
 from RemoteSensing.changedetection.datasets.make_data_loader import SemanticChangeDetectionDatset, make_data_loader
 from RemoteSensing.changedetection.utils_func.metrics import Evaluator
@@ -95,8 +94,6 @@ class Trainer(object):
         self.scheduler = StepLR(self.optim, step_size=10000, gamma=0.5)
 
         self.writer = SummaryWriter(log_dir=os.path.join(self.model_save_path, 'logs'))
-
-        self.ssim = SSIM(data_range=1, size_average=True, channel=3)
 
     def training(self):
         best_kc = 0.0
