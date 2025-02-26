@@ -15,7 +15,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from RemoteSensing.changedetection.datasets.make_data_loader import SemanticChangeDetectionDatset, make_data_loader
+from RemoteSensing.changedetection.datasets.make_data_loader import SemanticChangeDetectionDatset, make_data_loader, SemanticChangeDetectionDatset_LandSat
 from RemoteSensing.changedetection.utils_func.metrics import Evaluator
 from RemoteSensing.changedetection.models.STMambaSCD import STMambaSCD
 import RemoteSensing.changedetection.utils_func.lovasz_loss as L
@@ -67,7 +67,7 @@ class Trainer(object):
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
         self.deep_model = self.deep_model.cuda()
-        self.model_save_path = os.path.join(args.model_param_path, "SeK"+str(time.time()))
+        self.model_save_path = os.path.join(args.model_param_path, "LandSat")
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -186,8 +186,8 @@ class Trainer(object):
 
     def validation(self):
         print('---------starting evaluation-----------')
-        dataset = SemanticChangeDetectionDatset(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
-        val_data_loader = DataLoader(dataset, batch_size=12, num_workers=4, drop_last=False)
+        dataset = SemanticChangeDetectionDatset_LandSat(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
+        val_data_loader = DataLoader(dataset, batch_size=6, num_workers=4, drop_last=False)
         torch.cuda.empty_cache()
         acc_meter = AverageMeter()
 
