@@ -22,7 +22,7 @@ import RemoteSensing.changedetection.utils_func.lovasz_loss as L
 from torch.optim.lr_scheduler import StepLR
 from RemoteSensing.changedetection.utils_func.mcd_utils import accuracy, SCDD_eval_all, AverageMeter
 
-from ChangeDetection.CDlib.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass
+from RemoteSensing.changedetection.utils_func.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass
 
 from torch.utils.tensorboard import SummaryWriter
 
