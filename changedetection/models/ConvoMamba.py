@@ -3,7 +3,6 @@ import sys
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
-from MambaCD.classification.models.vmamba import VSSBlock
 
 import torch
 import torch.nn as nn
