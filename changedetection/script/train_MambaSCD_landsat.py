@@ -67,7 +67,7 @@ class Trainer(object):
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
         self.deep_model = self.deep_model.cuda()
-        self.model_save_path = os.path.join(args.model_param_path, "LandSat")
+        self.model_save_path = os.path.join(args.model_param_path, "LandSat2")
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -96,6 +96,7 @@ class Trainer(object):
 
     def training(self):
         best_kc = 0.0
+        START_ITER = self.args.start_iter
         best_round = []
         torch.cuda.empty_cache()
         elem_num = len(self.train_data_loader)
@@ -169,14 +170,14 @@ class Trainer(object):
                 if (itera + 1) % 500 == 0:
                     self.deep_model.eval()
                     kappa_n0, Fscd, IoU_mean, Sek, oa = self.validation()
-                    self.writer.add_scalar('Metrics/Kappa', kappa_n0, itera+1)
-                    self.writer.add_scalar('Metrics/F1', Fscd, itera+1)
-                    self.writer.add_scalar('Metrics/OA', oa, itera+1)
-                    self.writer.add_scalar('Metrics/mIoU', IoU_mean, itera+1)
-                    self.writer.add_scalar('Metrics/SeK', Sek, itera+1)
+                    self.writer.add_scalar('Metrics/Kappa', kappa_n0, itera+1+START_ITER)
+                    self.writer.add_scalar('Metrics/F1', Fscd, itera+1+ START_ITER)
+                    self.writer.add_scalar('Metrics/OA', oa, itera+1+START_ITER)
+                    self.writer.add_scalar('Metrics/mIoU', IoU_mean, itera+1+START_ITER)
+                    self.writer.add_scalar('Metrics/SeK', Sek, itera+1+START_ITER)
                     if Sek > best_kc and Sek > 0.245:
                         torch.save(self.deep_model.state_dict(),
-                                   os.path.join(self.model_save_path, f'{itera + 1}_model.pth'))
+                                   os.path.join(self.model_save_path, f'{itera + 1+START_ITER}_model.pth'))
                         best_kc = Sek
                         best_round = [kappa_n0, Fscd, IoU_mean, Sek, oa ]
                     self.deep_model.train()
@@ -187,7 +188,7 @@ class Trainer(object):
     def validation(self):
         print('---------starting evaluation-----------')
         dataset = SemanticChangeDetectionDatset_LandSat(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
-        val_data_loader = DataLoader(dataset, batch_size=6, num_workers=4, drop_last=False)
+        val_data_loader = DataLoader(dataset, batch_size=8, num_workers=4, drop_last=False)
         torch.cuda.empty_cache()
         acc_meter = AverageMeter()
 
