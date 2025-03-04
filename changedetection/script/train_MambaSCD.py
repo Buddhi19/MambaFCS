@@ -174,9 +174,14 @@ class Trainer(object):
                     self.writer.add_scalar('Metrics/OA', oa, itera+1)
                     self.writer.add_scalar('Metrics/mIoU', IoU_mean, itera+1)
                     self.writer.add_scalar('Metrics/SeK', Sek, itera+1)
-                    if Sek > best_kc and Sek > 0.245:
-                        torch.save(self.deep_model.state_dict(),
-                                   os.path.join(self.model_save_path, f'{itera + 1}_model.pth'))
+                    if Sek > best_kc:
+                        if Sek > 0.24:
+                            torch.save(self.deep_model.state_dict(),
+                                    os.path.join(self.model_save_path, f'{itera + 1}_model_{Sek:.3f}.pth'))
+                        else:
+                            # save a txt file to record the best round
+                            with open(os.path.join(self.model_save_path, f'{itera+5}_model_{Sek:.3f}.txt'), 'w') as f:
+                                f.write("")
                         best_kc = Sek
                         best_round = [kappa_n0, Fscd, IoU_mean, Sek, oa ]
                     self.deep_model.train()
@@ -187,7 +192,7 @@ class Trainer(object):
     def validation(self):
         print('---------starting evaluation-----------')
         dataset = SemanticChangeDetectionDatset(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
-        val_data_loader = DataLoader(dataset, batch_size=8, num_workers=4, drop_last=False)
+        val_data_loader = DataLoader(dataset, batch_size=16, num_workers=4, drop_last=False)
         torch.cuda.empty_cache()
         acc_meter = AverageMeter()
 

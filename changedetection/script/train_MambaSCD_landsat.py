@@ -146,9 +146,6 @@ class Trainer(object):
             weight_similarity = 0.5
             weight_lovasz = 0.5
 
-            if itera + self.args.start_iter > 30000:
-                weight_cd = 0
-
             main_loss = (weight_cd * (ce_loss_cd + weight_lovasz * lovasz_loss_cd) +
                          weight_clf * (ce_loss_clf_t1 + ce_loss_clf_t2 +
                                        weight_lovasz * (lovasz_loss_clf_t1 + lovasz_loss_clf_t2)) +
@@ -179,7 +176,7 @@ class Trainer(object):
                     self.writer.add_scalar('Metrics/SeK', Sek, itera+1+START_ITER)
                     if Sek > best_kc and Sek > 0.245:
                         torch.save(self.deep_model.state_dict(),
-                                   os.path.join(self.model_save_path, f'{itera + 1+START_ITER}_model.pth'))
+                                   os.path.join(self.model_save_path, f'{itera + 1+START_ITER}_model_{Sek:.3f}.pth'))
                         best_kc = Sek
                         best_round = [kappa_n0, Fscd, IoU_mean, Sek, oa ]
                     self.deep_model.train()
@@ -190,7 +187,7 @@ class Trainer(object):
     def validation(self):
         print('---------starting evaluation-----------')
         dataset = SemanticChangeDetectionDatset_LandSat(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
-        val_data_loader = DataLoader(dataset, batch_size=8, num_workers=4, drop_last=False)
+        val_data_loader = DataLoader(dataset, batch_size=12, num_workers=4, drop_last=False)
         torch.cuda.empty_cache()
         acc_meter = AverageMeter()
 
