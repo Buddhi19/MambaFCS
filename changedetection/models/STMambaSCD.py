@@ -102,31 +102,23 @@ class STMambaSCD(nn.Module):
         self.main_clf_cd = nn.Conv2d(in_channels=128, out_channels=output_cd, kernel_size=1)
         self.aux_clf = nn.Conv2d(in_channels=128, out_channels=output_clf, kernel_size=1)
 
-        self.unet = Unet(
-            dim=128,
-            channels=6,  # Input channels (3 for pre, 3 for post)
-            dim_mults=(1, 2, 4, 8),
-        )
         
         self.diffusion = GaussianDiffusion(
             CustomUnet(  # Use the custom UNet
                 dim=128,
                 channels=6,  # Input channels (3 for pre, 3 for post)
-                dim_mults=(1, 2, 4, 8),
+                dim_mults=(2, 4, 8, 16),
                 full_attn=(False, False, False, True) 
             ),
             image_size=256,
-            timesteps=1000,
+            timesteps=500,
             min_snr_loss_weight=True,  # Use min-SNR loss weighting
             min_snr_gamma=5,  # Gamma value for min-SNR loss weighting
             offset_noise_strength=0.1  # Add offset noise
         )
 
-        self.attention_proj = nn.ModuleList([
-            nn.Conv2d(512, 128, kernel_size=1),
-            nn.Conv2d(512, 256, kernel_size=1),
-            nn.Conv2d(512, 512, kernel_size=1),
-            nn.Conv2d(512, 1024, kernel_size=1)
+        self.attn_proj_list = nn.ModuleList([
+            nn.Conv2d(128*i, 128*2*i, kernel_size=1, bias=False) for i in [1, 2, 4, 8]
         ])
 
     def forward(self, pre_data, post_data):
@@ -134,46 +126,45 @@ class STMambaSCD(nn.Module):
         post_data = post_data.float()
         x = torch.cat([pre_data, post_data], dim=1)  # Shape: [batch, 6, height, width]
         
-        # Generate random timesteps
         batch_size = x.shape[0]
-        timesteps = torch.randint(0, 1000, (batch_size,)).to(x.device).long()
-        
-        # Sample noise and create noisy images
+        timesteps = torch.randint(0, 500, (batch_size,)).to(x.device).long()
         noise = torch.randn_like(x)
         x_noisy = self.diffusion.q_sample(x, timesteps, noise=noise)
-
-        timesteps = timesteps.float()
         
+        timesteps = timesteps.float()
         if x_noisy.dtype != torch.float32:
             x_noisy = x_noisy.float()
         
-        # Predict noise using UNet
+
         predicted_noise, attention_maps = self.diffusion.model(x_noisy, timesteps)
-        
-        # Compute diffusion loss
         diffusion_loss = F.mse_loss(predicted_noise, noise)
         
-        pre_features = self.encoder(pre_data)
+        # Encoder features
+        pre_features = self.encoder(pre_data)  # e.g., [128@256x256, 256@128x128, 512@64x64, 1024@32x32]
         post_features = self.encoder(post_data)
-
-        # Use the spatial sizes from the encoder features dynamically
-        base_attention = attention_maps[-1]
-        attention_scales = []
-        for feat, proj in zip(pre_features, self.attention_proj):
-            target_size = feat.shape[-2:]
-            scaled_attention = F.interpolate(
-                base_attention,
-                size=target_size,
-                mode='bilinear',
-                align_corners=False
-            )
-            scaled_attention = proj(scaled_attention)
-            attention_scales.append(scaled_attention)
-
-        pre_features = [feat * attn for feat, attn in zip(pre_features, attention_scales)]
-        post_features = [feat * attn for feat, attn in zip(post_features, attention_scales)]
-
-
+        
+        attention_maps_pre = []
+        attention_maps_post = []
+        assert len(attention_maps) == len(pre_features), "Mismatch between attention maps and feature levels"
+        for i, (attn_map, pre_feat, post_feat) in enumerate(zip(attention_maps, pre_features, post_features)):
+            target_size = pre_feat.shape[-2:]
+            channel_size = pre_feat.shape[1]
+            if attn_map.shape[-2:] != target_size:
+                attn_map = self.attn_proj_list[i](attn_map)
+                attn_map_pre = attn_map[:, :channel_size]
+                attn_map_post = attn_map[:, channel_size:]
+                attn_map_pre = F.interpolate(attn_map_pre, size=target_size, mode='bilinear', align_corners=False)
+                attn_map_post = F.interpolate(attn_map_post, size=target_size, mode='bilinear', align_corners=False)
+                attention_maps_pre.append(torch.sigmoid(attn_map_pre))
+                attention_maps_post.append(torch.sigmoid(attn_map_post))
+            else:
+                attn_map_pre = attn_map[:, :channel_size]
+                attn_map_post = attn_map[:, channel_size:]
+                attention_maps_pre.append(torch.sigmoid(attn_map_pre))
+                attention_maps_post.append(torch.sigmoid(attn_map_post))
+        
+        pre_features = [feat * attn for feat, attn in zip(pre_features, attention_maps_pre)]
+        post_features = [feat * attn for feat, attn in zip(post_features, attention_maps_post)]
         # Decoder processing - passing encoder outputs to the decoder
         output_bcd = self.decoder_bcd(pre_features, post_features)
         """
@@ -201,60 +192,51 @@ class STMambaSCD(nn.Module):
 
 class CustomUnet(Unet):
     def forward(self, x, t):
-        # Initial convolution to handle input channels
+        # Initial convolution
         x = self.init_conv(x)  # [batch, 128, H, W]
-        r = x.clone()  # Save for final residual connection
+        r = x.clone()  # Residual connection
         
-        # Process timesteps
+        # Time embedding
         time_emb = self.time_mlp(t)
         
-        # Initialize list to store intermediate features
         h = []
-        deepest_attention = None
+        attention_maps = []
         
         # Downsampling path
         for block1, block2, attn, downsample in self.downs:
-            # First ResnetBlock
             x = block1(x, time_emb)
             h.append(x)
             
-            # Second ResnetBlock
             x = block2(x, time_emb)
             h.append(x)
             
-            # Attention layer (only in deepest layer)
             if attn is not None:
-                x = attn(x) + x  # Residual connection
-                deepest_attention = x  # Store deepest attention map
+                x = attn(x) + x  # Apply attention with residual
+                attention_maps.append(x)  # Collect attention map
             
-            # Downsample
             x = downsample(x)
         
         # Middle blocks
         x = self.mid_block1(x, time_emb)
-        x = self.mid_attn(x) + x  # Mid attention with residual
+        x = self.mid_attn(x) + x
         x = self.mid_block2(x, time_emb)
         
         # Upsampling path
         for block1, block2, attn, upsample in self.ups:
-            # Pop two skip connections per up block
             skip1 = h.pop()
             skip2 = h.pop()
             
-            # Concatenate and process
             x = torch.cat((x, skip1), dim=1)
             x = block1(x, time_emb)
             
             x = torch.cat((x, skip2), dim=1)
             x = block2(x, time_emb)
             
-            # Upsample
             x = upsample(x)
         
-        # Final residual connection
+        # Final output
         x = torch.cat((x, r), dim=1)
         x = self.final_res_block(x, time_emb)
         final_output = self.final_conv(x)
         
-        # Return final output and deepest attention map
-        return final_output, [deepest_attention]
+        return final_output, attention_maps
