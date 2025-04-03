@@ -67,7 +67,7 @@ class Trainer(object):
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
         self.deep_model = self.deep_model.cuda()
-        self.model_save_path = os.path.join(args.model_param_path, "SeK_Highest")
+        self.model_save_path = os.path.join(args.model_param_path, "DDPM")
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -99,34 +99,7 @@ class Trainer(object):
 
     def validate_diffusion(self):
         print("Validating Diffusion Model")
-        self.deep_model.eval()
-        dataset = SemanticChangeDetectionDatset(
-            self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test'
-        )
-        self.val_data_loader = DataLoader(dataset, batch_size=8, num_workers=4, drop_last=False)
-        total_loss = 0.0
-        num_batches = 0
-        with torch.no_grad():
-            for data in self.val_data_loader:
-                pre_change_imgs, post_change_imgs, *_ = data
-                pre_change_imgs = pre_change_imgs.cuda()
-                post_change_imgs = post_change_imgs.cuda()
-                x = torch.cat([pre_change_imgs, post_change_imgs], dim=1)  # [B,6,H,W]
-                batch_size = x.shape[0]
-                timesteps = torch.randint(0, 500, (batch_size,), device=x.device).long()
-                noise = torch.randn_like(x)
-                x_noisy = self.deep_model.diffusion.q_sample(x, timesteps, noise=noise)
-                timesteps = timesteps.float()
-                predicted_noise, _ = self.deep_model.diffusion.model(x_noisy, timesteps)
-                loss = F.mse_loss(predicted_noise, noise)
-                total_loss += loss.item()
-                num_batches += 1
-                # Optionally limit validation batches.
-                if num_batches >= 10:
-                    break
-        avg_loss = total_loss / num_batches if num_batches > 0 else 0
-        self.deep_model.train()
-        return avg_loss
+        
 
     def _save_checkpoint(self, stage_name):
         checkpoint_path = os.path.join(self.model_save_path, f"{stage_name}_checkpoint_iter_{self.global_iter}.pth")
@@ -134,55 +107,8 @@ class Trainer(object):
         print(f"Saved {stage_name} checkpoint at iteration {self.global_iter} to {checkpoint_path}")
 
     def train_diffusion(self, num_iterations=15000):
-        print("Starting Diffusion Pretraining Stage")
-        for name, param in self.deep_model.named_parameters():
-            if "diffusion" in name:
-                param.requires_grad = True
-            else:
-                param.requires_grad = False
-            print(f"{name}: {param.requires_grad}")
-
-        diffusion_params = [p for n, p in self.deep_model.named_parameters() if "diffusion" in n and p.requires_grad]
-        optimizer = optim.AdamW(diffusion_params, lr=self.lr, weight_decay=self.args.weight_decay)
-        # Create a scheduler if desired.
-        self.scheduler = StepLR(optimizer, step_size=10000, gamma=0.5)
-        
-        self.deep_model.train()
-        data_iter = iter(self.train_data_loader)
-        for i in tqdm(range(num_iterations), desc="Diffusion Training"):
-            try:
-                data = next(data_iter)
-            except StopIteration:
-                data_iter = iter(self.train_data_loader)
-                data = next(data_iter)
-            pre_change_imgs, post_change_imgs, *_ = data
-            pre_change_imgs = pre_change_imgs.cuda()
-            post_change_imgs = post_change_imgs.cuda()
-            x = torch.cat([pre_change_imgs, post_change_imgs], dim=1)
-            batch_size = x.shape[0]
-            timesteps = torch.randint(0, 500, (batch_size,), device=x.device).long()
-            noise = torch.randn_like(x)
-            x_noisy = self.deep_model.diffusion.q_sample(x, timesteps, noise=noise)
-            timesteps = timesteps.float()
-            if x_noisy.dtype != torch.float32:
-                x_noisy = x_noisy.float()
-            predicted_noise, _ = self.deep_model.diffusion.model(x_noisy, timesteps)
-            diffusion_loss = F.mse_loss(predicted_noise, noise)
-            
-            optimizer.zero_grad()
-            diffusion_loss.backward()
-            optimizer.step()
-            self.scheduler.step()
-            
-            self.global_iter += 1
-            if self.global_iter % 10 == 0:
-                print(f"[Diffusion Stage] Iter {self.global_iter}: Loss = {diffusion_loss.item()}")
-                self.writer.add_scalar('Loss/Diffusion_Pretrain', diffusion_loss.item(), self.global_iter)
-            if self.global_iter == num_iterations:
-                val_loss = self.validate_diffusion()
-                print(f"[Diffusion Stage] Iter {self.global_iter}: Validation Loss = {val_loss}")
-                self.writer.add_scalar('Val/Diffusion', val_loss, self.global_iter)
-                self._save_checkpoint("diffusion")
+        print("Training Diffusion Model")
+         
 
     def training(self):
         best_kc = 0.0
@@ -210,7 +136,7 @@ class Trainer(object):
             label_clf_t1[label_clf_t1 == 0] = 255
             label_clf_t2[label_clf_t2 == 0] = 255
 
-            output_1, output_semantic_t1, output_semantic_t2, diffusion_loss = self.deep_model(pre_change_imgs, post_change_imgs)
+            output_1, output_semantic_t1, output_semantic_t2 = self.deep_model(pre_change_imgs, post_change_imgs)
 
             pre_change_imgs = pre_change_imgs.float()
             post_change_imgs = post_change_imgs.float()
@@ -251,7 +177,7 @@ class Trainer(object):
             self.optim.step()
             self.scheduler.step()
 
-            if (itera + 1) % 10 == 0:
+            if (itera + 1) % 50 == 0:
                 print(f'iter is {itera + 1}, change detection loss is {weight_cd * (ce_loss_cd + weight_lovasz * lovasz_loss_cd)}, '
                       f'classification loss is {weight_clf * (ce_loss_clf_t1 + ce_loss_clf_t2 + weight_lovasz * (lovasz_loss_clf_t1 + lovasz_loss_clf_t2))}, '
                       f'similarity loss is {weight_similarity * similarity_loss}')
@@ -280,7 +206,7 @@ class Trainer(object):
     def validation(self):
         print('---------starting evaluation-----------')
         dataset = SemanticChangeDetectionDatset(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
-        val_data_loader = DataLoader(dataset, batch_size=6, num_workers=4, drop_last=False)
+        val_data_loader = DataLoader(dataset, batch_size=4, num_workers=4, drop_last=False)
         torch.cuda.empty_cache()
         acc_meter = AverageMeter()
 
@@ -298,7 +224,7 @@ class Trainer(object):
 
 
                 # input_data = torch.cat([pre_change_imgs, post_change_imgs], dim=1)
-                output_1, output_semantic_t1, output_semantic_t2, diffusion_loss = self.deep_model(pre_change_imgs, post_change_imgs)
+                output_1, output_semantic_t1, output_semantic_t2 = self.deep_model(pre_change_imgs, post_change_imgs)
 
                 labels_cd = labels_cd.cpu().numpy()
                 labels_A = labels_clf_t1.cpu().numpy()

@@ -190,92 +190,22 @@ class ResnetBlock(Module):
 
         return h + self.res_conv(x)
 
-class LinearAttention(Module):
-    def __init__(
-        self,
-        dim,
-        heads = 4,
-        dim_head = 32,
-        num_mem_kv = 4
-    ):
-        super().__init__()
-        self.scale = dim_head ** -0.5
-        self.heads = heads
-        hidden_dim = dim_head * heads
+import sys
+import os
 
-        self.norm = RMSNorm(dim)
+main_dir = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
+sys.path.append(main_dir)
 
-        self.mem_kv = nn.Parameter(torch.randn(2, heads, dim_head, num_mem_kv))
-        self.to_qkv = nn.Conv2d(dim, hidden_dim * 3, 1, bias = False)
+from RemoteSensing.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
 
-        self.to_out = nn.Sequential(
-            nn.Conv2d(hidden_dim, dim, 1),
-            RMSNorm(dim)
-        )
-
-    def forward(self, x):
-        b, c, h, w = x.shape
-
-        x = self.norm(x)
-
-        qkv = self.to_qkv(x).chunk(3, dim = 1)
-        q, k, v = map(lambda t: rearrange(t, 'b (h c) x y -> b h c (x y)', h = self.heads), qkv)
-
-        mk, mv = map(lambda t: repeat(t, 'h c n -> b h c n', b = b), self.mem_kv)
-        k, v = map(partial(torch.cat, dim = -1), ((mk, k), (mv, v)))
-
-        q = q.softmax(dim = -2)
-        k = k.softmax(dim = -1)
-
-        q = q * self.scale
-
-        context = torch.einsum('b h d n, b h e n -> b h d e', k, v)
-
-        out = torch.einsum('b h d e, b h d n -> b h e n', context, q)
-        out = rearrange(out, 'b h c (x y) -> b (h c) x y', h = self.heads, x = h, y = w)
-        return self.to_out(out)
-
-class Attention(Module):
-    def __init__(
-        self,
-        dim,
-        heads = 4,
-        dim_head = 32,
-        num_mem_kv = 4,
-        flash = False
-    ):
-        super().__init__()
-        self.heads = heads
-        hidden_dim = dim_head * heads
-
-        self.norm = RMSNorm(dim)
-        self.attend = Attend(flash = flash)
-
-        self.mem_kv = nn.Parameter(torch.randn(2, heads, num_mem_kv, dim_head))
-        self.to_qkv = nn.Conv2d(dim, hidden_dim * 3, 1, bias = False)
-        self.to_out = nn.Conv2d(hidden_dim, dim, 1)
-
-    def forward(self, x):
-        b, c, h, w = x.shape
-
-        x = self.norm(x)
-
-        qkv = self.to_qkv(x).chunk(3, dim = 1)
-        q, k, v = map(lambda t: rearrange(t, 'b (h c) x y -> b h (x y) c', h = self.heads), qkv)
-
-        mk, mv = map(lambda t: repeat(t, 'h n d -> b h n d', b = b), self.mem_kv)
-        k, v = map(partial(torch.cat, dim = -2), ((mk, k), (mv, v)))
-
-        out = self.attend(q, k, v)
-
-        out = rearrange(out, 'b h (x y) d -> b (h d) x y', x = h, y = w)
-        return self.to_out(out)
-
-# model
 
 class Unet(Module):
     def __init__(
         self,
+        encoder_dims, 
+        channel_first, norm_layer, ssm_act_layer, mlp_act_layer,
         dim,
         init_dim = None,
         out_dim = None,
@@ -288,36 +218,30 @@ class Unet(Module):
         learned_sinusoidal_dim = 16,
         sinusoidal_pos_emb_theta = 10000,
         dropout = 0.,
-        attn_dim_head = 32,
-        attn_heads = 4,
-        full_attn = None,    # defaults to full attention only for inner most layer
-        flash_attn = False
+        **kwargs
     ):
         super().__init__()
 
-        # determine dimensions
-
+        # **Determine Dimensions**
         self.channels = channels
         self.self_condition = self_condition
         input_channels = channels * (2 if self_condition else 1)
 
         init_dim = default(init_dim, dim)
-        self.init_conv = nn.Conv2d(input_channels, init_dim, 7, padding = 3)
+        self.init_conv = nn.Conv2d(input_channels, init_dim, 7, padding=3)
 
         dims = [init_dim, *map(lambda m: dim * m, dim_mults)]
         in_out = list(zip(dims[:-1], dims[1:]))
 
-        # time embeddings
-
+        # **Time Embeddings**
         time_dim = dim * 4
 
         self.random_or_learned_sinusoidal_cond = learned_sinusoidal_cond or random_fourier_features
-
         if self.random_or_learned_sinusoidal_cond:
             sinu_pos_emb = RandomOrLearnedSinusoidalPosEmb(learned_sinusoidal_dim, random_fourier_features)
             fourier_dim = learned_sinusoidal_dim + 1
         else:
-            sinu_pos_emb = SinusoidalPosEmb(dim, theta = sinusoidal_pos_emb_theta)
+            sinu_pos_emb = SinusoidalPosEmb(dim, theta=sinusoidal_pos_emb_theta)
             fourier_dim = dim
 
         self.time_mlp = nn.Sequential(
@@ -327,58 +251,112 @@ class Unet(Module):
             nn.Linear(time_dim, time_dim)
         )
 
-        # attention
+        resnet_block = partial(ResnetBlock, time_emb_dim=time_dim, dropout=dropout)
 
-        if not full_attn:
-            full_attn = (*((False,) * (len(dim_mults) - 1)), True)
-
-        num_stages = len(dim_mults)
-        full_attn  = cast_tuple(full_attn, num_stages)
-        attn_heads = cast_tuple(attn_heads, num_stages)
-        attn_dim_head = cast_tuple(attn_dim_head, num_stages)
-
-        assert len(full_attn) == len(dim_mults)
-
-        # prepare blocks
-
-        FullAttention = partial(Attention, flash = flash_attn)
-        resnet_block = partial(ResnetBlock, time_emb_dim = time_dim, dropout = dropout)
-
-        # layers
-
+        # **Layers**
         self.downs = ModuleList([])
         self.ups = ModuleList([])
         num_resolutions = len(in_out)
 
-        for ind, ((dim_in, dim_out), layer_full_attn, layer_attn_heads, layer_attn_dim_head) in enumerate(zip(in_out, full_attn, attn_heads, attn_dim_head)):
+        # **Downsampling Path**
+        for ind, (dim_in, dim_out) in enumerate(in_out):
             is_last = ind >= (num_resolutions - 1)
-
-            attn_klass = FullAttention if layer_full_attn else LinearAttention
 
             self.downs.append(ModuleList([
                 resnet_block(dim_in, dim_in),
                 resnet_block(dim_in, dim_in),
-                attn_klass(dim_in, dim_head = layer_attn_dim_head, heads = layer_attn_heads),
-                Downsample(dim_in, dim_out) if not is_last else nn.Conv2d(dim_in, dim_out, 3, padding = 1)
+                nn.Sequential(
+                    Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
+                    VSSBlock(
+                        hidden_dim=dim_in,
+                        drop_path=0.1,
+                        norm_layer=norm_layer,
+                        channel_first=channel_first,
+                        ssm_d_state=kwargs['ssm_d_state'],
+                        ssm_ratio=kwargs['ssm_ratio'],
+                        ssm_dt_rank=kwargs['ssm_dt_rank'],
+                        ssm_act_layer=ssm_act_layer,
+                        ssm_conv=kwargs['ssm_conv'],
+                        ssm_conv_bias=kwargs['ssm_conv_bias'],
+                        ssm_drop_rate=kwargs['ssm_drop_rate'],
+                        ssm_init=kwargs['ssm_init'],
+                        forward_type=kwargs['forward_type'],
+                        mlp_ratio=kwargs['mlp_ratio'],
+                        mlp_act_layer=mlp_act_layer,
+                        mlp_drop_rate=kwargs['mlp_drop_rate'],
+                        gmlp=kwargs['gmlp'],
+                        use_checkpoint=kwargs['use_checkpoint']
+                    ),
+                    Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
+                ),
+                Downsample(dim_in, dim_out) if not is_last else nn.Conv2d(dim_in, dim_out, 3, padding=1)
             ]))
 
+        # **Middle Blocks**
         mid_dim = dims[-1]
         self.mid_block1 = resnet_block(mid_dim, mid_dim)
-        self.mid_attn = FullAttention(mid_dim, heads = attn_heads[-1], dim_head = attn_dim_head[-1])
+        self.mid_vss = nn.Sequential(
+            Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
+            VSSBlock(
+                hidden_dim=mid_dim,
+                drop_path=0.1,
+                norm_layer=norm_layer,
+                channel_first=channel_first,
+                ssm_d_state=kwargs['ssm_d_state'],
+                ssm_ratio=kwargs['ssm_ratio'],
+                ssm_dt_rank=kwargs['ssm_dt_rank'],
+                ssm_act_layer=ssm_act_layer,
+                ssm_conv=kwargs['ssm_conv'],
+                ssm_conv_bias=kwargs['ssm_conv_bias'],
+                ssm_drop_rate=kwargs['ssm_drop_rate'],
+                ssm_init=kwargs['ssm_init'],
+                forward_type=kwargs['forward_type'],
+                mlp_ratio=kwargs['mlp_ratio'],
+                mlp_act_layer=mlp_act_layer,
+                mlp_drop_rate=kwargs['mlp_drop_rate'],
+                gmlp=kwargs['gmlp'],
+                use_checkpoint=kwargs['use_checkpoint']
+            ),
+            Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
+        )
         self.mid_block2 = resnet_block(mid_dim, mid_dim)
 
-        for ind, ((dim_in, dim_out), layer_full_attn, layer_attn_heads, layer_attn_dim_head) in enumerate(zip(*map(reversed, (in_out, full_attn, attn_heads, attn_dim_head)))):
-            is_last = ind == (len(in_out) - 1)
-
-            attn_klass = FullAttention if layer_full_attn else LinearAttention
+        # **Upsampling Path**
+        up_in_out = [(dim_out, dim_in) for dim_in, dim_out in list(reversed(in_out))]
+        for ind, (dim_in, dim_out) in enumerate(up_in_out):
+            is_last = ind == (len(up_in_out) - 1)
 
             self.ups.append(ModuleList([
-                resnet_block(dim_out + dim_in, dim_out),
-                resnet_block(dim_out + dim_in, dim_out),
-                attn_klass(dim_out, dim_head = layer_attn_dim_head, heads = layer_attn_heads),
-                Upsample(dim_out, dim_in) if not is_last else  nn.Conv2d(dim_out, dim_in, 3, padding = 1)
+                resnet_block(dim_out * 2, dim_out),
+                resnet_block(dim_out, dim_out),
+                nn.Sequential(
+                    Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
+                    VSSBlock(
+                        hidden_dim=dim_out,
+                        drop_path=0.1,
+                        norm_layer=norm_layer,
+                        channel_first=channel_first,
+                        ssm_d_state=kwargs['ssm_d_state'],
+                        ssm_ratio=kwargs['ssm_ratio'],
+                        ssm_dt_rank=kwargs['ssm_dt_rank'],
+                        ssm_act_layer=ssm_act_layer,
+                        ssm_conv=kwargs['ssm_conv'],
+                        ssm_conv_bias=kwargs['ssm_conv_bias'],
+                        ssm_drop_rate=kwargs['ssm_drop_rate'],
+                        ssm_init=kwargs['ssm_init'],
+                        forward_type=kwargs['forward_type'],
+                        mlp_ratio=kwargs['mlp_ratio'],
+                        mlp_act_layer=mlp_act_layer,
+                        mlp_drop_rate=kwargs['mlp_drop_rate'],
+                        gmlp=kwargs['gmlp'],
+                        use_checkpoint=kwargs['use_checkpoint']
+                    ),
+                    Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
+                ),
+                Upsample(dim_in, dim_out) if not is_last else nn.Conv2d(dim_in, dim_out, 3, padding=1)
             ]))
 
+        # **Final Layers**
         default_out_dim = channels * (1 if not learned_variance else 2)
         self.out_dim = default(out_dim, default_out_dim)
 
@@ -389,48 +367,63 @@ class Unet(Module):
     def downsample_factor(self):
         return 2 ** (len(self.downs) - 1)
 
-    def forward(self, x, time, x_self_cond = None):
-        assert all([divisible_by(d, self.downsample_factor) for d in x.shape[-2:]]), f'your input dimensions {x.shape[-2:]} need to be divisible by {self.downsample_factor}, given the unet'
-
+    def forward(self, x, time, x_self_cond=None, extract_features=False):
+        """
+        Args:
+            x: Input tensor (e.g., [B, 3, H, W] for CD, or [B, 6, H, W] for DDPM if unchanged)
+            time: Timestep tensor (e.g., [B])
+            x_self_cond: Self-conditioning input (optional)
+            extract_features: Boolean flag to return upsampling features
+        Returns:
+            output: Final output tensor if not extract_features
+            features: List of feature tensors from upsampling path if extract_features=True
+        """
+        # Self-conditioning
         if self.self_condition:
             x_self_cond = default(x_self_cond, lambda: torch.zeros_like(x))
-            x = torch.cat((x_self_cond, x), dim = 1)
+            x = torch.cat((x_self_cond, x), dim=1)
 
+        # Initial convolution
         x = self.init_conv(x)
-        r = x.clone()
+        r = x.clone()  # Residual connection
 
+        # Time embedding (set to 0 for feature extraction)
+        if extract_features:
+            time = torch.zeros_like(time)
         t = self.time_mlp(time)
 
+        # Downsampling
         h = []
-
-        for block1, block2, attn, downsample in self.downs:
+        for block1, block2, vss, downsample in self.downs:
             x = block1(x, t)
-            h.append(x)
-
             x = block2(x, t)
-            x = attn(x) + x
-            h.append(x)
-
+            x = vss(x) + x
+            h.append(x)  # Store skip connection
             x = downsample(x)
 
+        # Middle
         x = self.mid_block1(x, t)
-        x = self.mid_attn(x) + x
+        x = self.mid_vss(x) + x
         x = self.mid_block2(x, t)
 
-        for block1, block2, attn, upsample in self.ups:
-            x = torch.cat((x, h.pop()), dim = 1)
-            x = block1(x, t)
-
-            x = torch.cat((x, h.pop()), dim = 1)
-            x = block2(x, t)
-            x = attn(x) + x
-
+        # Upsampling
+        features = []
+        for block1, block2, vss, upsample in self.ups:
             x = upsample(x)
+            skip = h.pop()
+            x = torch.cat((x, skip), dim=1)
+            x = block1(x, t)
+            x = block2(x, t)
+            x = vss(x) + x
+            if extract_features:
+                features.append(x)
 
-        x = torch.cat((x, r), dim = 1)
-
+        # Final layers
+        x = torch.cat((x, r), dim=1)
         x = self.final_res_block(x, t)
-        return self.final_conv(x)
+        output = self.final_conv(x)
+
+        return features if extract_features else output
 
 # gaussian diffusion trainer class
 
