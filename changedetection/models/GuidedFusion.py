@@ -1,176 +1,100 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from RemoteSensing.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
-from RemoteSensing.changedetection.models.ResBlockSe import SqueezeExcitation
 
-
-class MambaGF(nn.Module):
-    def __init__(self, in_channels):
-        super(MambaGF, self).__init__()
-        self.Fusion_1 = iAFF(in_channels)
-
-        self.SE = SqueezeExcitation(in_channels)
-        self.BatchNorm = nn.BatchNorm2d(in_channels)
-        self.Relu = nn.ReLU()
-
-    def forward(self, x1, x2):
-        x_1 = self.Fusion_1(x1, x2)
-        x = self.SE(x_1)
-        x = self.BatchNorm(x)
-        x = self.Relu(x)
-        return x
-
-
-
-class DAF(nn.Module):
-    '''
-    直接相加 DirectAddFuse
-    '''
-
-    def __init__(self):
-        super(DAF, self).__init__()
-
-    def forward(self, x, residual):
-        return x + residual
-
-
-class iAFF(nn.Module):
-    '''
-    多特征融合 iAFF
-    '''
-
-    def __init__(self, channels=64, r=4):
-        super(iAFF, self).__init__()
-        inter_channels = int(channels // r)
-
-        # 本地注意力
-        self.local_att = nn.Sequential(
-            nn.Conv2d(channels, inter_channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(inter_channels),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(inter_channels, channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(channels),
+class ChannelAttention(nn.Module):
+    def __init__(self, channel, reduction=16):
+        super().__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.max_pool = nn.AdaptiveMaxPool2d(1)
+        self.fc = nn.Sequential(
+            nn.Linear(channel, channel // reduction),
+            nn.ReLU(),
+            nn.Linear(channel // reduction, channel),
+            nn.Sigmoid()
         )
 
-        # 全局注意力
-        self.global_att = nn.Sequential(
-            nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(channels, inter_channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(inter_channels),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(inter_channels, channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(channels),
-        )
+    def forward(self, x):
+        b, c, _, _ = x.size()
+        avg_out = self.fc(self.avg_pool(x).view(b, c))
+        max_out = self.fc(self.max_pool(x).view(b, c))
+        return (avg_out + max_out).view(b, c, 1, 1)
 
-        # 第二次本地注意力
-        self.local_att2 = nn.Sequential(
-            nn.Conv2d(channels, inter_channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(inter_channels),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(inter_channels, channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(channels),
-        )
-        # 第二次全局注意力
-        self.global_att2 = nn.Sequential(
-            nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(channels, inter_channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(inter_channels),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(inter_channels, channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(channels),
-        )
-
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, x, residual):
-        xa = x + residual
-        xl = self.local_att(xa)
-        xg = self.global_att(xa)
-        xlg = xl + xg
-        wei = self.sigmoid(xlg)
-        xi = x * wei + residual * (1 - wei)
-
-        xl2 = self.local_att2(xi)
-        xg2 = self.global_att(xi)
-        xlg2 = xl2 + xg2
-        wei2 = self.sigmoid(xlg2)
-        xo = x * wei2 + residual * (1 - wei2)
-        return xo
-
-
-class AFF(nn.Module):
-    '''
-    多特征融合 AFF
-    '''
-
-    def __init__(self, channels=64, r=4):
-        super(AFF, self).__init__()
-        inter_channels = int(channels // r)
-
-        self.local_att = nn.Sequential(
-            nn.Conv2d(channels, inter_channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(inter_channels),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(inter_channels, channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(channels),
-        )
-
-        self.global_att = nn.Sequential(
-            nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(channels, inter_channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(inter_channels),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(inter_channels, channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(channels),
-        )
-
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, x, residual):
-        xa = x + residual
-        xl = self.local_att(xa)
-        xg = self.global_att(xa)
-        xlg = xl + xg
-        wei = self.sigmoid(xlg)
-
-        xo = 2 * x * wei + 2 * residual * (1 - wei)
-        return xo
-
-
-class MS_CAM(nn.Module):
-    '''
-    单特征 进行通道加权,作用类似SE模块
-    '''
-
-    def __init__(self, channels=64, r=4):
-        super(MS_CAM, self).__init__()
-        inter_channels = int(channels // r)
-
-        self.local_att = nn.Sequential(
-            nn.Conv2d(channels, inter_channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(inter_channels),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(inter_channels, channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(channels),
-        )
-
-        self.global_att = nn.Sequential(
-            nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(channels, inter_channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(inter_channels),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(inter_channels, channels, kernel_size=1, stride=1, padding=0),
-            nn.BatchNorm2d(channels),
-        )
-
+class SpatialAttention(nn.Module):
+    def __init__(self, kernel_size=7):
+        super().__init__()
+        self.conv = nn.Conv2d(2, 1, kernel_size, padding=kernel_size//2)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        xl = self.local_att(x)
-        xg = self.global_att(x)
-        xlg = xl + xg
-        wei = self.sigmoid(xlg)
-        return x * wei
+        avg_out = torch.mean(x, dim=1, keepdim=True)
+        max_out, _ = torch.max(x, dim=1, keepdim=True)
+        combined = torch.cat([avg_out, max_out], dim=1)
+        return self.sigmoid(self.conv(combined))
 
+class PyramidFusion(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.shortcut = nn.Conv2d(in_channels, out_channels, 1) if in_channels != out_channels else nn.Identity()
         
+        # Multi-scale processing branches
+        self.branch1 = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, 1),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU()
+        )
+        self.branch3 = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, 3, padding=1),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU()
+        )
+        self.branch5 = nn.Sequential(
+            nn.Conv2d(in_channels, in_channels, 5, padding=2, groups=in_channels),
+            nn.Conv2d(in_channels, out_channels, 1),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU()
+        )
+        
+        # Attention mechanism
+        self.channel_att = ChannelAttention(out_channels * 3)
+        self.spatial_att = SpatialAttention()
+        
+        # Fusion
+        self.final_conv = nn.Sequential(
+            nn.Conv2d(out_channels * 3, out_channels, 1),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU()
+        )
+
+    def forward(self, x):
+        residual = self.shortcut(x)
+        
+        # Multi-scale features
+        b1 = self.branch1(x)
+        b3 = self.branch3(x)
+        b5 = self.branch5(x)
+        
+        # Concatenate and apply attention
+        combined = torch.cat([b1, b3, b5], dim=1)
+        channel_weights = self.channel_att(combined)
+        weighted = combined * channel_weights
+        spatial_weights = self.spatial_att(weighted)
+        weighted = weighted * spatial_weights
+        
+        # Final fusion
+        fused = self.final_conv(weighted)
+        return fused + residual
+
+class DepthwiseSeparableConv(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.depthwise = nn.Conv2d(in_channels, in_channels, kernel_size=3, 
+                                 padding=1, groups=in_channels)
+        self.pointwise = nn.Conv2d(in_channels, out_channels, kernel_size=1)
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.act = nn.ReLU()
+
+    def forward(self, x):
+        x = self.depthwise(x)
+        x = self.pointwise(x)
+        return self.act(self.bn(x))
