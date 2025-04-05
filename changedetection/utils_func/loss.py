@@ -185,3 +185,22 @@ class PerceptualLoss(nn.Module):
         input_features = self.vgg(input)
         target_features = self.vgg(target)
         return F.mse_loss(input_features, target_features)
+
+
+def tversky_loss(output, target, alpha=0.7, beta=0.3, smooth=1e-6):
+    # Binary change detection assumed (classes 0: no change, 1: change)
+    logits = F.softmax(output, dim=1)
+    pred = logits[:, 1, ...]  # Probability of change class
+    target = (target == 1).float()  # Convert to binary mask
+    
+    # Flatten tensors
+    pred_flat = pred.contiguous().view(-1)
+    target_flat = target.contiguous().view(-1)
+    
+    # Calculate TP, FP, FN
+    tp = (pred_flat * target_flat).sum()
+    fp = ((1 - target_flat) * pred_flat).sum()
+    fn = (target_flat * (1 - pred_flat)).sum()
+    
+    tversky = (tp + smooth) / (tp + alpha * fn + beta * fp + smooth)
+    return 1 - tversky
