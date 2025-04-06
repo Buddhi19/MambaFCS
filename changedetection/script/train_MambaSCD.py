@@ -22,7 +22,7 @@ import RemoteSensing.changedetection.utils_func.lovasz_loss as L
 from torch.optim.lr_scheduler import StepLR
 from RemoteSensing.changedetection.utils_func.mcd_utils import accuracy, SCDD_eval_all, AverageMeter
 
-from RemoteSensing.changedetection.utils_func.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass
+from RemoteSensing.changedetection.utils_func.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass, sek_loss
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -159,24 +159,24 @@ class Trainer(object):
             self.scheduler.step()
 
             if (itera + 1) % 10 == 0:
-                print(f'iter is {itera + 1}, change detection loss is {weight_cd * (ce_loss_cd + weight_lovasz * lovasz_loss_cd)}, '
+                print(f'iter is {itera + 1 + self.args.start_iter}, change detection loss is {weight_cd * (ce_loss_cd + weight_lovasz * lovasz_loss_cd)}, '
                       f'classification loss is {weight_clf * (ce_loss_clf_t1 + ce_loss_clf_t2 + weight_lovasz * (lovasz_loss_clf_t1 + lovasz_loss_clf_t2))}, '
                       f'similarity loss is {weight_similarity * similarity_loss}')
-                self.writer.add_scalar('Loss/ChangeDetection', weight_cd * (ce_loss_cd + weight_lovasz * lovasz_loss_cd), itera + 1)
-                self.writer.add_scalar('Loss/Classification', weight_clf * (ce_loss_clf_t1 + ce_loss_clf_t2 + weight_lovasz * (lovasz_loss_clf_t1 + lovasz_loss_clf_t2)), itera + 1)
-                self.writer.add_scalar('Loss/Similarity', weight_similarity * similarity_loss, itera + 1)
-                self.writer.add_scalar('Loss/Total', final_loss, itera + 1)
+                self.writer.add_scalar('Loss/ChangeDetection', weight_cd * (ce_loss_cd + weight_lovasz * lovasz_loss_cd), itera + 1 + self.args.start_iter)
+                self.writer.add_scalar('Loss/Classification', weight_clf * (ce_loss_clf_t1 + ce_loss_clf_t2 + weight_lovasz * (lovasz_loss_clf_t1 + lovasz_loss_clf_t2)), itera + 1 + self.args.start_iter)
+                self.writer.add_scalar('Loss/Similarity', weight_similarity * similarity_loss, itera + 1 + self.args.start_iter)
+                self.writer.add_scalar('Loss/Total', final_loss, itera + 1 + self.args.start_iter)
                 if (itera + 1) % 500 == 0:
                     self.deep_model.eval()
                     kappa_n0, Fscd, IoU_mean, Sek, oa = self.validation()
-                    self.writer.add_scalar('Metrics/Kappa', kappa_n0, itera+1)
-                    self.writer.add_scalar('Metrics/F1', Fscd, itera+1)
-                    self.writer.add_scalar('Metrics/OA', oa, itera+1)
-                    self.writer.add_scalar('Metrics/mIoU', IoU_mean, itera+1)
-                    self.writer.add_scalar('Metrics/SeK', Sek, itera+1)
+                    self.writer.add_scalar('Metrics/Kappa', kappa_n0, itera + 1 + self.args.start_iter)
+                    self.writer.add_scalar('Metrics/F1', Fscd, itera + 1 + self.args.start_iter)
+                    self.writer.add_scalar('Metrics/OA', oa, itera + 1 + self.args.start_iter)
+                    self.writer.add_scalar('Metrics/mIoU', IoU_mean, itera + 1 + self.args.start_iter)
+                    self.writer.add_scalar('Metrics/SeK', Sek, itera + 1 + self.args.start_iter)
                     if Sek > best_kc:
                         torch.save(self.deep_model.state_dict(),
-                                    os.path.join(self.model_save_path, f'{itera + 1}_model_{Sek:.3f}.pth'))
+                                    os.path.join(self.model_save_path, f'{itera + 1 + self.args.start_iter}_model_{Sek:.3f}.pth'))
                         best_kc = Sek
                         best_round = [kappa_n0, Fscd, IoU_mean, Sek, oa ]
                     self.deep_model.train()

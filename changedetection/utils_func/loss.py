@@ -204,3 +204,52 @@ def tversky_loss(output, target, alpha=0.7, beta=0.3, smooth=1e-6):
     
     tversky = (tp + smooth) / (tp + alpha * fn + beta * fp + smooth)
     return 1 - tversky
+
+def sek_loss(y_pred, y_true, non_change_class=0, beta=2.0, eps=1e-7):
+    """
+    y_pred: Predicted logits (B, C+1, H, W)
+    y_true: Ground truth labels (B, H, W)
+    non_change_class: Index of non-change class (default=0)
+    beta: Weight for mIoU term
+    eps: Numerical stability term
+    """
+    # Mask for changed pixels
+    mask = (y_true != non_change_class)
+    B, C_plus_1, H, W = y_pred.shape
+    C = C_plus_1 - 1  # Exclude non-change class
+    
+    # Filter predictions and labels
+    y_pred = y_pred.permute(0, 2, 3, 1)[mask]  # (N_change, C+1)
+    y_pred_change = y_pred[:, 1:]  # Exclude non-change class (N_change, C)
+    y_true_change = y_true[mask] - 1  # Shift labels to 0-based (N_change,)
+    
+    # One-hot encode true labels
+    y_true_onehot = F.one_hot(y_true_change, num_classes=C).float()
+    
+    # Soft confusion matrix Q (C, C)
+    Q = torch.matmul(y_pred_change.T, y_true_onehot)  # (C, C)
+    
+    # Adjusted Kappa Loss
+    po_sek = torch.trace(Q) / (torch.sum(Q) + eps)
+    row_sums = torch.sum(Q, dim=1)
+    col_sums = torch.sum(Q, dim=0)
+    pe_sek = torch.sum(row_sums * col_sums) / (torch.sum(Q)**2 + eps)
+    L_kappa = 1 - (po_sek - pe_sek) / (1 - pe_sek + eps)
+    
+    # Frequency-Weighted mIoU Loss
+    intersection = torch.diag(Q)
+    union = row_sums + col_sums - intersection
+    iou = intersection / (union + eps)
+    
+    # Compute inverse frequency weights
+    freq = torch.sum(y_true_onehot, dim=0) / torch.sum(y_true_onehot)
+    weights = 1 / torch.log(freq + eps + 1)  # +1 to avoid log(0)
+    weights = weights / torch.sum(weights)  # Normalize
+    
+    weighted_iou = torch.sum(weights * iou)
+    L_iou = 1 - weighted_iou
+    
+    # Total loss
+    total_loss = L_kappa + beta * L_iou
+    return total_loss
+
