@@ -98,3 +98,32 @@ class DepthwiseSeparableConv(nn.Module):
         x = self.depthwise(x)
         x = self.pointwise(x)
         return self.act(self.bn(x))
+
+
+class CrossAttentionFusion(nn.Module):
+    def __init__(self, in_channels, num_heads=8):
+        super(CrossAttentionFusion, self).__init__()
+        self.num_heads = num_heads
+        self.query_conv = nn.Conv2d(in_channels, in_channels, kernel_size=1)
+        self.key_conv = nn.Conv2d(in_channels, in_channels, kernel_size=1)
+        self.value_conv = nn.Conv2d(in_channels, in_channels, kernel_size=1)
+        self.gamma = nn.Parameter(torch.zeros(1))  # Learnable scaling factor
+    
+    def forward(self, pre_feat, post_feat):
+        B, C, H, W = pre_feat.size()
+        # Generate query, key, and value
+        query = self.query_conv(pre_feat).view(B, -1, H * W).permute(0, 2, 1)  # B, H*W, C
+        key = self.key_conv(post_feat).view(B, -1, H * W)  # B, C, H*W
+        value = self.value_conv(post_feat).view(B, -1, H * W)  # B, C, H*W
+        
+        # Compute attention scores and apply softmax
+        attention = torch.bmm(query, key)  # B, H*W, H*W
+        attention = F.softmax(attention, dim=-1)
+        
+        # Compute weighted output
+        out = torch.bmm(value, attention.permute(0, 2, 1))  # B, C, H*W
+        out = out.view(B, C, H, W)
+        
+        # Residual connection with learnable gamma
+        out = self.gamma * out + pre_feat
+        return out

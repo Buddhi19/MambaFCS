@@ -67,7 +67,7 @@ class Trainer(object):
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
         self.deep_model = self.deep_model.cuda()
-        self.model_save_path = os.path.join(args.model_param_path, "Noshadow_attn_change")
+        self.model_save_path = os.path.join(args.model_param_path, "Noshadow_new_decoder")
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -187,7 +187,7 @@ class Trainer(object):
     def validation(self):
         print('---------starting evaluation-----------')
         dataset = SemanticChangeDetectionDatset(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
-        val_data_loader = DataLoader(dataset, batch_size=16, num_workers=4, drop_last=False)
+        val_data_loader = DataLoader(dataset, batch_size=4, num_workers=4, drop_last=False)
         torch.cuda.empty_cache()
         acc_meter = AverageMeter()
 
