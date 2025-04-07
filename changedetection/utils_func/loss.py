@@ -205,51 +205,94 @@ def tversky_loss(output, target, alpha=0.7, beta=0.3, smooth=1e-6):
     tversky = (tp + smooth) / (tp + alpha * fn + beta * fp + smooth)
     return 1 - tversky
 
-def sek_loss(y_pred, y_true, non_change_class=0, beta=2.0, eps=1e-7):
-    """
-    y_pred: Predicted logits (B, C+1, H, W)
-    y_true: Ground truth labels (B, H, W)
-    non_change_class: Index of non-change class (default=0)
-    beta: Weight for mIoU term
-    eps: Numerical stability term
-    """
-    # Mask for changed pixels
-    mask = (y_true != non_change_class)
-    B, C_plus_1, H, W = y_pred.shape
-    C = C_plus_1 - 1  # Exclude non-change class
-    
-    # Filter predictions and labels
-    y_pred = y_pred.permute(0, 2, 3, 1)[mask]  # (N_change, C+1)
-    y_pred_change = y_pred[:, 1:]  # Exclude non-change class (N_change, C)
-    y_true_change = y_true[mask] - 1  # Shift labels to 0-based (N_change,)
-    
-    # One-hot encode true labels
-    y_true_onehot = F.one_hot(y_true_change, num_classes=C).float()
-    
-    # Soft confusion matrix Q (C, C)
-    Q = torch.matmul(y_pred_change.T, y_true_onehot)  # (C, C)
-    
-    # Adjusted Kappa Loss
-    po_sek = torch.trace(Q) / (torch.sum(Q) + eps)
-    row_sums = torch.sum(Q, dim=1)
-    col_sums = torch.sum(Q, dim=0)
-    pe_sek = torch.sum(row_sums * col_sums) / (torch.sum(Q)**2 + eps)
-    L_kappa = 1 - (po_sek - pe_sek) / (1 - pe_sek + eps)
-    
-    # Frequency-Weighted mIoU Loss
-    intersection = torch.diag(Q)
-    union = row_sums + col_sums - intersection
-    iou = intersection / (union + eps)
-    
-    # Compute inverse frequency weights
-    freq = torch.sum(y_true_onehot, dim=0) / torch.sum(y_true_onehot)
-    weights = 1 / torch.log(freq + eps + 1)  # +1 to avoid log(0)
-    weights = weights / torch.sum(weights)  # Normalize
-    
-    weighted_iou = torch.sum(weights * iou)
-    L_iou = 1 - weighted_iou
-    
-    # Total loss
-    total_loss = L_kappa + beta * L_iou
-    return total_loss
-
+class SeK_Loss(nn.Module):
+    def __init__(self, num_classes, non_change_class=0, beta=1.5, gamma=0.5, eps=1e-7):
+        super().__init__()
+        self.num_classes = num_classes
+        self.non_change = non_change_class
+        self.beta = beta  # Controls IoU emphasis
+        self.gamma = gamma  # Class balancing
+        self.eps = eps
+        
+    def forward(self, pred_t1, pred_t2, label_t1, label_t2, change_mask):
+        """
+        Args:
+            pred_t1: (B, C, H, W) logits for time 1
+            pred_t2: (B, C, H, W) logits for time 2
+            label_t1: (B, H, W) ground truth labels T1
+            label_t2: (B, H, W) ground truth labels T2
+            change_mask: (B, H, W) binary mask (1=changed)
+        """
+        B, C, H, W = pred_t1.shape
+        device = pred_t1.device
+        
+        # Mask changed regions
+        change_mask = change_mask.unsqueeze(1)  # B,1,H,W
+        valid_classes = [c for c in range(C) if c != self.non_change]
+        
+        # Convert to probabilities
+        prob_t1 = F.softmax(pred_t1, dim=1) * change_mask
+        prob_t2 = F.softmax(pred_t2, dim=1) * change_mask
+        
+        # Flatten tensors
+        prob_t1 = prob_t1.permute(0,2,3,1).reshape(-1, C)  # (N, C)
+        prob_t2 = prob_t2.permute(0,2,3,1).reshape(-1, C)
+        label_t1 = label_t1.reshape(-1)  # (N)
+        label_t2 = label_t2.reshape(-1)
+        mask = change_mask.reshape(-1).bool()  # (N)
+        
+        # Filter changed pixels
+        prob_t1 = prob_t1[mask]
+        prob_t2 = prob_t2[mask]
+        label_t1 = label_t1[mask]
+        label_t2 = label_t2[mask]
+        
+        if prob_t1.size(0) == 0:  # No changes in batch
+            return torch.tensor(0.0).to(device)
+            
+        # 1. Kappa Component --------------------------------------------------
+        def compute_kappa(probs, labels):
+            # Build soft confusion matrix
+            oh_labels = F.one_hot(labels, C).float()  # (N, C)
+            conf_matrix = torch.matmul(probs.T, oh_labels)  # (C, C)
+            
+            # Exclude non-change class
+            conf_matrix = conf_matrix[valid_classes][:, valid_classes]
+            total = conf_matrix.sum()
+            
+            # Observed agreement
+            po = torch.diag(conf_matrix).sum() / total
+            
+            # Expected agreement
+            row_sum = conf_matrix.sum(dim=1)
+            col_sum = conf_matrix.sum(dim=0)
+            pe = torch.sum(row_sum * col_sum) / (total ** 2)
+            
+            return (po - pe) / (1 - pe + self.eps)
+            
+        kappa_t1 = compute_kappa(prob_t1, label_t1)
+        kappa_t2 = compute_kappa(prob_t2, label_t2)
+        kappa = (kappa_t1 + kappa_t2) / 2
+        
+        # 2. mIoU Component ---------------------------------------------------
+        def compute_iou(probs, labels):
+            oh_labels = F.one_hot(labels, C).float()
+            intersection = (probs * oh_labels).sum(dim=0)[valid_classes]
+            union = probs.sum(dim=0)[valid_classes] + oh_labels.sum(dim=0)[valid_classes] - intersection
+            
+            # Frequency weighting
+            freq = oh_labels.sum(dim=0)[valid_classes]
+            weights = 1 / torch.log(freq + 1 + self.eps)
+            weights = weights / weights.sum()
+            
+            return (intersection / (union + self.eps) * weights).sum()
+            
+        iou_t1 = compute_iou(prob_t1, label_t1)
+        iou_t2 = compute_iou(prob_t2, label_t2)
+        miou = (iou_t1 + iou_t2) / 2
+        
+        # 3. Combined Loss ----------------------------------------------------
+        sek_value = kappa * torch.exp(self.beta * miou)
+        loss = 1 - sek_value + self.gamma * (1 - miou)
+        
+        return loss

@@ -377,3 +377,5 @@ def random_photometric_imgs(img):
             pil_img = ImageEnhance.Color(pil_img).enhance(factor)
 
     return np.array(pil_img)
+
+

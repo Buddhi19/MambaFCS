@@ -6,6 +6,7 @@ import numpy as np
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
+import random
 
 import RemoteSensing.changedetection.datasets.imutils as imutils
 
@@ -95,6 +96,8 @@ class SemanticChangeDetectionDatset(Dataset):
             pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_fliplr_mcd(pre_img, post_img, cd_label, t1_label, t2_label)
             pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_flipud_mcd(pre_img, post_img, cd_label, t1_label, t2_label)
             pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_rot_mcd(pre_img, post_img, cd_label, t1_label, t2_label) 
+            pre_img= imutils.random_photometric_imgs(pre_img)
+            post_img = imutils.random_photometric_imgs(post_img)
 
         pre_img = imutils.normalize_img(pre_img)  # imagenet normalization
         pre_img = np.transpose(pre_img, (2, 0, 1))
@@ -191,6 +194,92 @@ class SemanticChangeDetectionDatset_LandSat(Dataset):
         return len(self.data_list)
 
 
+
+class CombinedSemanticChangeDetectionDataset(Dataset):
+    def __init__(self, 
+                 shadow_dataset_path, shadow_data_list, 
+                 no_shadow_dataset_path, no_shadow_data_list, 
+                 crop_size, max_iters=None, mode='train', data_loader=img_loader):
+        self.crop_size = crop_size
+        self.mode = mode
+        self.loader = data_loader
+        self.data_pro_type = self.mode
+        
+        # Combine datasets with domain indicators (0: shadow, 1: no_shadow)
+        self.data_list = [(fname, 0) for fname in shadow_data_list] + [(fname, 1) for fname in no_shadow_data_list]
+        random.shuffle(self.data_list)
+        
+        # Handle max_iters to ensure dataset length matches required iterations
+        if max_iters is not None:
+            req_repeats = int(np.ceil(float(max_iters) / len(self.data_list)))
+            self.data_list = self.data_list * req_repeats
+            self.data_list = self.data_list[:max_iters]
+        
+        # Store dataset paths
+        self.shadow_dataset_path = shadow_dataset_path
+        self.no_shadow_dataset_path = no_shadow_dataset_path
+
+    def __transforms(self, aug, pre_img, post_img, cd_label, t1_label, t2_label):
+        if aug:
+            pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_crop_mcd(
+                pre_img, post_img, cd_label, t1_label, t2_label, self.crop_size)
+            pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_fliplr_mcd(
+                pre_img, post_img, cd_label, t1_label, t2_label)
+            pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_flipud_mcd(
+                pre_img, post_img, cd_label, t1_label, t2_label)
+            pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_rot_mcd(
+                pre_img, post_img, cd_label, t1_label, t2_label)
+            pre_img = imutils.random_photometric_imgs(pre_img)
+            post_img = imutils.random_photometric_imgs(post_img)
+
+        # Normalize and transpose images
+        pre_img = imutils.normalize_img(pre_img)
+        pre_img = np.transpose(pre_img, (2, 0, 1))
+        post_img = imutils.normalize_img(post_img)
+        post_img = np.transpose(post_img, (2, 0, 1))
+
+        return pre_img, post_img, cd_label, t1_label, t2_label
+
+    def __getitem__(self, index):
+        filename, domain = self.data_list[index]  # Unpack domain indicator
+        
+        # Select dataset path based on domain
+        if domain == 0:
+            base_path = self.shadow_dataset_path
+        else:
+            base_path = self.no_shadow_dataset_path
+        
+        # Load images and labels
+        pre_path = os.path.join(base_path, 'T1', filename)
+        post_path = os.path.join(base_path, 'T2', filename)
+        T1_label_path = os.path.join(base_path, 'GT_T1', filename)
+        T2_label_path = os.path.join(base_path, 'GT_T2', filename)
+        cd_label_path = os.path.join(base_path, 'GT_CD', filename)
+
+        pre_img = self.loader(pre_path)
+        post_img = self.loader(post_path)
+        t1_label = self.loader(T1_label_path)
+        t2_label = self.loader(T2_label_path)
+        cd_label = self.loader(cd_label_path)
+        cd_label = cd_label / 255  # Normalize CD labels
+
+        # Apply transforms
+        if 'train' in self.data_pro_type:
+            pre_img, post_img, cd_label, t1_label, t2_label = self.__transforms(
+                True, pre_img, post_img, cd_label, t1_label, t2_label)
+        else:
+            pre_img, post_img, cd_label, t1_label, t2_label = self.__transforms(
+                False, pre_img, post_img, cd_label, t1_label, t2_label)
+            cd_label = np.asarray(cd_label)
+            t1_label = np.asarray(t1_label)
+            t2_label = np.asarray(t2_label)
+
+        return pre_img, post_img, cd_label, t1_label, t2_label, (filename, domain)
+
+    def __len__(self):
+        return len(self.data_list)
+
+
 class DamageAssessmentDatset(Dataset):
     def __init__(self, dataset_path, data_list, crop_size, max_iters=None, type='train', data_loader=img_loader):
         self.dataset_path = dataset_path
@@ -271,7 +360,15 @@ def make_data_loader(args, **kwargs):  # **kwargs could be omitted
         return data_loader
     
     elif 'SECOND' in args.dataset:
-        dataset = SemanticChangeDetectionDatset(args.train_dataset_path, args.train_data_name_list, args.crop_size, args.max_iters, args.type)
+        dataset = CombinedSemanticChangeDetectionDataset(
+            shadow_dataset_path=args.shadow_train_dataset_path, 
+            shadow_data_list=args.train_data_name_list,
+            no_shadow_dataset_path=args.no_shadow_train_dataset_path,
+            no_shadow_data_list=args.train_data_name_list,
+            crop_size=args.crop_size,
+            max_iters=args.max_iters,
+            mode=args.type
+        )
         data_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, **kwargs, num_workers=16,
                                  drop_last=False)
         return data_loader

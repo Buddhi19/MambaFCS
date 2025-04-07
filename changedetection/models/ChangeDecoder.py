@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from RemoteSensing.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
 from RemoteSensing.changedetection.models.ResBlockSe import ResBlock, SqueezeExcitation
-from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion, DepthwiseSeparableConv, CrossAttentionFusion
+from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion, DepthwiseSeparableConv, CrossAttentionFusion, BiDirectionalCrossAttentionFusion
 
 class ChangeDecoder(nn.Module):
     def __init__(self, encoder_dims, channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs):
@@ -53,10 +53,10 @@ class ChangeDecoder(nn.Module):
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
 
-        self.fuse_layer_1 = CrossAttentionFusion(in_channels=encoder_dims[-1])
-        self.fuse_layer_2 = CrossAttentionFusion(in_channels=encoder_dims[-2])
-        self.fuse_layer_3 = CrossAttentionFusion(in_channels=encoder_dims[-3])
-        self.fuse_layer_4 = CrossAttentionFusion(in_channels=encoder_dims[-4])
+        self.fuse_layer_1 = BiDirectionalCrossAttentionFusion(in_channels=encoder_dims[-1])
+        self.fuse_layer_2 = BiDirectionalCrossAttentionFusion(in_channels=encoder_dims[-2])
+        self.fuse_layer_3 = BiDirectionalCrossAttentionFusion(in_channels=encoder_dims[-3])
+        self.fuse_layer_4 = BiDirectionalCrossAttentionFusion(in_channels=encoder_dims[-4])
 
         self.down_sample_1 = DepthwiseSeparableConv(in_channels=encoder_dims[-1], out_channels=encoder_dims[-2])
         self.down_sample_2 = DepthwiseSeparableConv(in_channels=encoder_dims[-2], out_channels=encoder_dims[-3])
