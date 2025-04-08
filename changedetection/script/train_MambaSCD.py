@@ -23,6 +23,7 @@ from torch.optim.lr_scheduler import StepLR
 from RemoteSensing.changedetection.utils_func.mcd_utils import accuracy, SCDD_eval_all, AverageMeter
 
 from RemoteSensing.changedetection.utils_func.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass, SeK_Loss
+from RemoteSensing.changedetection.utils_func.utils import WarmUpCosineAnnealingLR
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -67,7 +68,7 @@ class Trainer(object):
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
         self.deep_model = self.deep_model.cuda()
-        self.model_save_path = os.path.join(args.model_param_path, "Noshadow_new_bidirectional_new_loss_combined_dataset")
+        self.model_save_path = os.path.join(args.model_param_path, "Noshadow_new_bidirectional_new_loss_combined_dataset_cosine")
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -90,7 +91,9 @@ class Trainer(object):
                                  lr=args.learning_rate,
                                  weight_decay=args.weight_decay)
 
-        self.scheduler = StepLR(self.optim, step_size=10000, gamma=0.5)
+        self.scheduler = WarmUpCosineAnnealingLR(self.optim,
+                                                 warm_up_steps=args.warm_up_steps,
+                                                 max_steps=args.max_iters)
 
         self.writer = SummaryWriter(log_dir=os.path.join(self.model_save_path, 'logs'))
 
@@ -184,7 +187,7 @@ class Trainer(object):
                 self.writer.add_scalar('Loss/Classification', weights["ce"] * (ce_loss_clf_t1 + ce_loss_clf_t2) + weights["lovasz"] * (lovasz_loss_clf_t1 + lovasz_loss_clf_t2), itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Similarity', weights["similarity"] * similarity_loss, itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Total', total_loss, itera + 1 + self.args.start_iter)
-                if ((itera + 1) % 1000 == 0 and itera > 20000) or ((itera + 1) % 2500 == 0 and itera <= 20000):
+                if ((itera + 1) % 5000 == 0 and itera > 40000) or ((itera + 1) % 10000 == 0 and itera <= 40000):
                     self.deep_model.eval()
                     kappa_n0, Fscd, IoU_mean, Sek, oa = self.validation()
                     self.writer.add_scalar('Metrics/Kappa', kappa_n0, itera + 1 + self.args.start_iter)
