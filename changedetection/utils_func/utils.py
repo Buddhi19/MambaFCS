@@ -100,20 +100,3 @@ def save_network(opt, epoch, cd_model, optimizer, is_best_model=False ):
         logger.info(
             'Saved best CD model in [{:s}] ...'.format(best_cd_gen_path))
 
-
-class WarmUpCosineAnnealingLR(torch.optim.lr_scheduler._LRScheduler):
-    def __init__(self, optimizer, warm_up_steps, max_steps, eta_min=0, last_epoch=-1):
-        self.warm_up_steps = warm_up_steps
-        self.max_steps = max_steps
-        self.eta_min = eta_min
-        super(WarmUpCosineAnnealingLR, self).__init__(optimizer, last_epoch)
-
-    def get_lr(self):
-        if self.last_epoch < self.warm_up_steps:
-            # Linear warm-up
-            lr_factor = float(self.last_epoch + 1) / float(self.warm_up_steps)
-        else:
-            # Cosine Annealing after warm-up
-            lr_factor = 0.5 * (1 + torch.cos(torch.pi * (self.last_epoch - self.warm_up_steps) / (self.max_steps - self.warm_up_steps)))
-        
-        return [base_lr * lr_factor for base_lr in self.base_lrs]

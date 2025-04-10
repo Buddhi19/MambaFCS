@@ -23,7 +23,6 @@ from torch.optim.lr_scheduler import StepLR
 from RemoteSensing.changedetection.utils_func.mcd_utils import accuracy, SCDD_eval_all, AverageMeter
 
 from RemoteSensing.changedetection.utils_func.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass, SeK_Loss
-from RemoteSensing.changedetection.utils_func.utils import WarmUpCosineAnnealingLR
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -68,7 +67,7 @@ class Trainer(object):
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
         self.deep_model = self.deep_model.cuda()
-        self.model_save_path = os.path.join(args.model_param_path, "Noshadow_new_bidirectional_new_loss_combined_dataset_cosine")
+        self.model_save_path = os.path.join(args.model_param_path, "Noshadow_new_bidirectional_new_loss_combined_dataset_dice")
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -91,9 +90,7 @@ class Trainer(object):
                                  lr=args.learning_rate,
                                  weight_decay=args.weight_decay)
 
-        self.scheduler = WarmUpCosineAnnealingLR(self.optim,
-                                                 warm_up_steps=args.warm_up_steps,
-                                                 max_steps=args.max_iters)
+        self.scheduler = StepLR(self.optim, step_size=10000, gamma=0.5)
 
         self.writer = SummaryWriter(log_dir=os.path.join(self.model_save_path, 'logs'))
 
@@ -138,9 +135,9 @@ class Trainer(object):
 
             # ================== Auxiliary Losses ==================
             # 1. Semantic segmentation losses
-            ce_loss_cd = F.cross_entropy(output_1, label_cd, ignore_index=255)
-            ce_loss_clf_t1 = F.cross_entropy(output_semantic_t1, label_clf_t1, ignore_index=255)
-            ce_loss_clf_t2 = F.cross_entropy(output_semantic_t2, label_clf_t2, ignore_index=255)
+            ce_loss_cd = ce2_dice1(output_1, label_cd)
+            ce_loss_clf_t1 = ce2_dice1_multiclass(output_semantic_t1, label_clf_t1)
+            ce_loss_clf_t2 = ce2_dice1_multiclass(output_semantic_t2, label_clf_t2)
             
             # 2. Boundary refinement
             lovasz_loss_cd = L.lovasz_softmax(F.softmax(output_1, dim=1), label_cd, ignore=255)
@@ -187,7 +184,7 @@ class Trainer(object):
                 self.writer.add_scalar('Loss/Classification', weights["ce"] * (ce_loss_clf_t1 + ce_loss_clf_t2) + weights["lovasz"] * (lovasz_loss_clf_t1 + lovasz_loss_clf_t2), itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Similarity', weights["similarity"] * similarity_loss, itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Total', total_loss, itera + 1 + self.args.start_iter)
-                if ((itera + 1) % 5000 == 0 and itera > 40000) or ((itera + 1) % 10000 == 0 and itera <= 40000):
+                if ((itera + 1) % 500 == 0 and itera > 40000) or ((itera + 1) % 5000 == 0 and itera <= 40000):
                     self.deep_model.eval()
                     kappa_n0, Fscd, IoU_mean, Sek, oa = self.validation()
                     self.writer.add_scalar('Metrics/Kappa', kappa_n0, itera + 1 + self.args.start_iter)
@@ -207,7 +204,7 @@ class Trainer(object):
 
     def validation(self):
         print('---------starting evaluation-----------')
-        dataset = SemanticChangeDetectionDatset(self.args.no_shadow_test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
+        dataset = SemanticChangeDetectionDatset(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
         val_data_loader = DataLoader(dataset, batch_size=4, num_workers=4, drop_last=False)
         torch.cuda.empty_cache()
         acc_meter = AverageMeter()

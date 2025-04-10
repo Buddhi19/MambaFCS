@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from RemoteSensing.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
 from RemoteSensing.changedetection.models.ResBlockSe import ResBlock, SqueezeExcitation
-from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion, DepthwiseSeparableConv, CrossAttentionFusion, BiDirectionalCrossAttentionFusion
+from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion, DepthwiseSeparableConv, BiDirectionalCrossAttentionFusion
 
 class ChangeDecoder(nn.Module):
     def __init__(self, encoder_dims, channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs):
@@ -58,9 +58,9 @@ class ChangeDecoder(nn.Module):
         self.fuse_layer_3 = BiDirectionalCrossAttentionFusion(in_channels=encoder_dims[-3])
         self.fuse_layer_4 = BiDirectionalCrossAttentionFusion(in_channels=encoder_dims[-4])
 
-        self.down_sample_1 = DepthwiseSeparableConv(in_channels=encoder_dims[-1], out_channels=encoder_dims[-2])
-        self.down_sample_2 = DepthwiseSeparableConv(in_channels=encoder_dims[-2], out_channels=encoder_dims[-3])
-        self.down_sample_3 = DepthwiseSeparableConv(in_channels=encoder_dims[-3], out_channels=encoder_dims[-4])
+        self.down_sample_1 = PyramidFusion(in_channels=encoder_dims[-1], out_channels=encoder_dims[-2])
+        self.down_sample_2 = PyramidFusion(in_channels=encoder_dims[-2], out_channels=encoder_dims[-3])
+        self.down_sample_3 = PyramidFusion(in_channels=encoder_dims[-3], out_channels=encoder_dims[-4])
     
 
         # Smooth layer
@@ -84,13 +84,6 @@ class ChangeDecoder(nn.Module):
         p4 = self.fuse_layer_1(pre_feat_4, post_feat_4)
         p4 = self.st_block_41(p4)
 
-        p4_diff = torch.abs(pre_feat_4 - post_feat_4)
-        p4_attention = torch.sigmoid(p4_diff)
-        p4 = p4 * p4_attention
-
-        p4 = self.down_sample_1(p4)
-        
-
         '''
             Stage II
         '''
@@ -98,11 +91,6 @@ class ChangeDecoder(nn.Module):
         p3 = self._upsample_add(p4, p3)  # Stage number as argument
         p3 = self.smooth_layer_3(p3)
         p3 = self.st_block_31(p3)
-        
-        # Calculate attention after fusion
-        p3_diff = torch.abs(pre_feat_3 - post_feat_3)
-        p3_attention = torch.sigmoid(p3_diff)
-        p3 = p3 * p3_attention
 
         p3 = self.down_sample_2(p3)
 
@@ -113,9 +101,6 @@ class ChangeDecoder(nn.Module):
         p2 = self._upsample_add(p3, p2)  # Stage number as argument
         p2 = self.smooth_layer_2(p2)
         p2 = self.st_block_21(p2)
-        p2_diff = torch.abs(pre_feat_2 - post_feat_2)
-        p2_attention = torch.sigmoid(p2_diff)
-        p2 = p2 * p2_attention
 
         p2 = self.down_sample_3(p2)
 
@@ -126,9 +111,6 @@ class ChangeDecoder(nn.Module):
         p1 = self._upsample_add(p2, p1)
         p1 = self.smooth_layer_1(p1)
         p1 = self.st_block_11(p1)
-        p1_diff = torch.abs(pre_feat_1 - post_feat_1)
-        p1_attention = torch.sigmoid(p1_diff)
-        p1 = p1 * p1_attention
 
         change_maps = [p4_attention, p3_attention, p2_attention, p1_attention]
 

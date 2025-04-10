@@ -132,54 +132,43 @@ class CrossAttentionFusion(nn.Module):
 class BiDirectionalCrossAttentionFusion(nn.Module):
     def __init__(self, in_channels, num_heads=8):
         super(BiDirectionalCrossAttentionFusion, self).__init__()
-        self.num_heads = num_heads  # (For potential extension to multi-head attention)
+        self.num_heads = num_heads  # Reserved for potential multi-head attention extension
         
-        # For forward attention: pre features query post features
+        # Forward attention: pre features query post features
         self.query_conv_pre = nn.Conv2d(in_channels, in_channels, kernel_size=1)
         self.key_conv_post = nn.Conv2d(in_channels, in_channels, kernel_size=1)
         self.value_conv_post = nn.Conv2d(in_channels, in_channels, kernel_size=1)
         
-        # For backward attention: post features query pre features
+        # Backward attention: post features query pre features
         self.query_conv_post = nn.Conv2d(in_channels, in_channels, kernel_size=1)
         self.key_conv_pre = nn.Conv2d(in_channels, in_channels, kernel_size=1)
         self.value_conv_pre = nn.Conv2d(in_channels, in_channels, kernel_size=1)
         
-        # Learnable scaling factors for each direction (initialized as zero)
+        # Learnable scaling factors for residual connections
         self.gamma_fwd = nn.Parameter(torch.zeros(1))
         self.gamma_bwd = nn.Parameter(torch.zeros(1))
         
-        # Adaptive gating: fuse the two directions using a 1x1 convolution
-        self.gate_conv = nn.Conv2d(in_channels * 2, in_channels, kernel_size=1)
+        # Enhanced gating: process forward, backward, and difference features
+        self.gate_conv = nn.Conv2d(in_channels * 3, in_channels * 2, kernel_size=1)
         self.sigmoid = nn.Sigmoid()
         
     def forward(self, pre_feat, post_feat):
         B, C, H, W = pre_feat.shape
         
-        # -----------------------------
         # Forward Attention: pre -> post
-        # -----------------------------
-        # pre features generate queries
         query_pre = self.query_conv_pre(pre_feat).view(B, C, -1).permute(0, 2, 1)  # (B, H*W, C)
-        # post features produce keys and values
-        key_post = self.key_conv_post(post_feat).view(B, C, -1)   # (B, C, H*W)
+        key_post = self.key_conv_post(post_feat).view(B, C, -1)  # (B, C, H*W)
         value_post = self.value_conv_post(post_feat).view(B, C, -1)  # (B, C, H*W)
         
-        # Compute dot-product attention (with scaling)
         attn_fwd = torch.bmm(query_pre, key_post) / (C ** 0.5)  # (B, H*W, H*W)
         attn_fwd = F.softmax(attn_fwd, dim=-1)
-        # Weighted sum of values
         out_fwd = torch.bmm(attn_fwd, value_post.permute(0, 2, 1))  # (B, H*W, C)
         out_fwd = out_fwd.permute(0, 2, 1).view(B, C, H, W)
-        # Residual connection with a learnable scale
         out_fwd = self.gamma_fwd * out_fwd + pre_feat
 
-        # -----------------------------
         # Backward Attention: post -> pre
-        # -----------------------------
-        # post features generate queries
         query_post = self.query_conv_post(post_feat).view(B, C, -1).permute(0, 2, 1)  # (B, H*W, C)
-        # pre features produce keys and values
-        key_pre = self.key_conv_pre(pre_feat).view(B, C, -1)   # (B, C, H*W)
+        key_pre = self.key_conv_pre(pre_feat).view(B, C, -1)  # (B, C, H*W)
         value_pre = self.value_conv_pre(pre_feat).view(B, C, -1)  # (B, C, H*W)
         
         attn_bwd = torch.bmm(query_post, key_pre) / (C ** 0.5)  # (B, H*W, H*W)
@@ -188,14 +177,12 @@ class BiDirectionalCrossAttentionFusion(nn.Module):
         out_bwd = out_bwd.permute(0, 2, 1).view(B, C, H, W)
         out_bwd = self.gamma_bwd * out_bwd + post_feat
 
-        # -----------------------------
-        # Adaptive Fusion via Gating
-        # -----------------------------
-        # Concatenate both outputs along the channel dimension
-        combined = torch.cat([out_fwd, out_bwd], dim=1)  # (B, 2C, H, W)
-        # Learn a gating weight map (values in [0,1])
-        gate = self.sigmoid(self.gate_conv(combined))  # (B, C, H, W)
-        # Fuse the two outputs using the learned gate
-        fused = gate * out_fwd + (1 - gate) * out_bwd
+        # Enhanced Fusion with Change-Aware Gating
+        diff = pre_feat - post_feat  # Difference feature (B, C, H, W)
+        combined = torch.cat([out_fwd, out_bwd, diff], dim=1)  # (B, 3C, H, W)
+        gates = self.gate_conv(combined).chunk(2, dim=1)  # Split into two (B, C, H, W) gates
+        gate_fwd = self.sigmoid(gates[0])  # Gate for forward attention
+        gate_bwd = self.sigmoid(gates[1])  # Gate for backward attention
+        fused = gate_fwd * out_fwd + gate_bwd * out_bwd  # Change-aware fusion
         
         return fused

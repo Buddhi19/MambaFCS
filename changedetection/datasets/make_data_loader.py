@@ -347,6 +347,7 @@ class DamageAssessmentDatset(Dataset):
 
 
 def make_data_loader(args, **kwargs):  # **kwargs could be omitted
+    SHADOW = False
     if 'SYSU' in args.dataset or 'LEVIR-CD+' in args.dataset or 'WHU' in args.dataset:
         dataset = ChangeDetectionDatset(args.train_dataset_path, args.train_data_name_list, args.crop_size, args.max_iters, args.type)
         # train_sampler = DistributedSampler(dataset, shuffle=True)
@@ -359,16 +360,22 @@ def make_data_loader(args, **kwargs):  # **kwargs could be omitted
                                  drop_last=False)
         return data_loader
     
+    # elif 'SECOND' in args.dataset and SHADOW:
+    #     dataset = CombinedSemanticChangeDetectionDataset(
+    #         shadow_dataset_path=args.shadow_train_dataset_path, 
+    #         shadow_data_list=args.train_data_name_list,
+    #         no_shadow_dataset_path=args.no_shadow_train_dataset_path,
+    #         no_shadow_data_list=args.train_data_name_list,
+    #         crop_size=args.crop_size,
+    #         max_iters=args.max_iters,
+    #         mode=args.type
+    #     )
+    #     data_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, **kwargs, num_workers=16,
+    #                              drop_last=False)
+    #     return data_loader
+
     elif 'SECOND' in args.dataset:
-        dataset = CombinedSemanticChangeDetectionDataset(
-            shadow_dataset_path=args.shadow_train_dataset_path, 
-            shadow_data_list=args.train_data_name_list,
-            no_shadow_dataset_path=args.no_shadow_train_dataset_path,
-            no_shadow_data_list=args.train_data_name_list,
-            crop_size=args.crop_size,
-            max_iters=args.max_iters,
-            mode=args.type
-        )
+        dataset = SemanticChangeDetectionDatset(args.train_dataset_path, args.train_data_name_list, args.crop_size, args.max_iters, args.type)
         data_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, **kwargs, num_workers=16,
                                  drop_last=False)
         return data_loader
