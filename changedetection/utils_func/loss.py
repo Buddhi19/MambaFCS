@@ -295,4 +295,4 @@ class SeK_Loss(nn.Module):
         sek_value = kappa * torch.exp(self.beta * miou)
         loss = 1 - sek_value + self.gamma * (1 - miou)
         
-        return loss
+        return torch.clamp(loss, min=0.0) 

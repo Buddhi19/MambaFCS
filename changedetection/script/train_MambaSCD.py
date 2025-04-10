@@ -15,7 +15,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from RemoteSensing.changedetection.datasets.make_data_loader import CombinedSemanticChangeDetectionDataset, make_data_loader, SemanticChangeDetectionDatset
+from RemoteSensing.changedetection.datasets.make_data_loader import SemanticChangeDetectionDatset, make_data_loader
 from RemoteSensing.changedetection.utils_func.metrics import Evaluator
 from RemoteSensing.changedetection.models.STMambaSCD import STMambaSCD
 import RemoteSensing.changedetection.utils_func.lovasz_loss as L
@@ -67,7 +67,7 @@ class Trainer(object):
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
         self.deep_model = self.deep_model.cuda()
-        self.model_save_path = os.path.join(args.model_param_path, "Noshadow_new_bidirectional_new_loss_combined_dataset_dice")
+        self.model_save_path = os.path.join(args.model_param_path, "CA_spatial")
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -154,12 +154,18 @@ class Trainer(object):
 
             # ================== Loss Weighting ==================
             weights = {
-                'sek': 1.4,
-                'bcd': 0.4,
-                'ce': 0.3,
-                'lovasz': 0.4,
-                'similarity': 0.3
+                'sek': 0,
+                'bcd': 1,
+                'ce': 0.5,
+                'lovasz': 0.5,
+                'similarity': 0.05
             }
+            if itera > 10000:
+                weights['sek'] = 1
+                weights['bcd'] = 0.4
+                weights['ce'] = 0.25
+                weights['lovasz'] = 0.25
+                weights['similarity'] = 0.025
 
             total_loss = (
                 weights['sek'] * sek_loss_value +
@@ -184,7 +190,7 @@ class Trainer(object):
                 self.writer.add_scalar('Loss/Classification', weights["ce"] * (ce_loss_clf_t1 + ce_loss_clf_t2) + weights["lovasz"] * (lovasz_loss_clf_t1 + lovasz_loss_clf_t2), itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Similarity', weights["similarity"] * similarity_loss, itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Total', total_loss, itera + 1 + self.args.start_iter)
-                if ((itera + 1) % 500 == 0 and itera > 40000) or ((itera + 1) % 5000 == 0 and itera <= 40000):
+                if ((itera + 1) % 1000 == 0 and (itera + 1) > 10000) or ((itera + 1) % 5000 == 0 and itera < 10000):
                     self.deep_model.eval()
                     kappa_n0, Fscd, IoU_mean, Sek, oa = self.validation()
                     self.writer.add_scalar('Metrics/Kappa', kappa_n0, itera + 1 + self.args.start_iter)
@@ -205,7 +211,7 @@ class Trainer(object):
     def validation(self):
         print('---------starting evaluation-----------')
         dataset = SemanticChangeDetectionDatset(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
-        val_data_loader = DataLoader(dataset, batch_size=4, num_workers=4, drop_last=False)
+        val_data_loader = DataLoader(dataset, batch_size=1, num_workers=4, drop_last=False)
         torch.cuda.empty_cache()
         acc_meter = AverageMeter()
 

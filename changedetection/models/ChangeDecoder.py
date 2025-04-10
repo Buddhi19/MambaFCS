@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from RemoteSensing.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
 from RemoteSensing.changedetection.models.ResBlockSe import ResBlock, SqueezeExcitation
-from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion, DepthwiseSeparableConv, BiDirectionalCrossAttentionFusion
+from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion, DepthwiseSeparableConv, CrossAttentionFusion
 
 class ChangeDecoder(nn.Module):
     def __init__(self, encoder_dims, channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs):
@@ -53,10 +53,11 @@ class ChangeDecoder(nn.Module):
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
 
-        self.fuse_layer_1 = BiDirectionalCrossAttentionFusion(in_channels=encoder_dims[-1])
-        self.fuse_layer_2 = BiDirectionalCrossAttentionFusion(in_channels=encoder_dims[-2])
-        self.fuse_layer_3 = BiDirectionalCrossAttentionFusion(in_channels=encoder_dims[-3])
-        self.fuse_layer_4 = BiDirectionalCrossAttentionFusion(in_channels=encoder_dims[-4])
+        self.fuse_layer_1 = CrossAttentionFusion(in_channels=encoder_dims[-1], use_diff=True, cross_attn_heads=4)
+        self.fuse_layer_2 = CrossAttentionFusion(in_channels=encoder_dims[-2], use_diff=True, cross_attn_heads=4)
+        self.fuse_layer_3 = CrossAttentionFusion(in_channels=encoder_dims[-3], use_diff=True, cross_attn_heads=4)
+        self.fuse_layer_4 = CrossAttentionFusion(in_channels=encoder_dims[-4], use_diff=True, cross_attn_heads=4)
+
 
         self.down_sample_1 = PyramidFusion(in_channels=encoder_dims[-1], out_channels=encoder_dims[-2])
         self.down_sample_2 = PyramidFusion(in_channels=encoder_dims[-2], out_channels=encoder_dims[-3])
@@ -84,6 +85,9 @@ class ChangeDecoder(nn.Module):
         p4 = self.fuse_layer_1(pre_feat_4, post_feat_4)
         p4 = self.st_block_41(p4)
 
+        p4_attention = p4
+        p4 = self.down_sample_1(p4)
+
         '''
             Stage II
         '''
@@ -91,6 +95,7 @@ class ChangeDecoder(nn.Module):
         p3 = self._upsample_add(p4, p3)  # Stage number as argument
         p3 = self.smooth_layer_3(p3)
         p3 = self.st_block_31(p3)
+        p3_attention = p3
 
         p3 = self.down_sample_2(p3)
 
@@ -101,6 +106,7 @@ class ChangeDecoder(nn.Module):
         p2 = self._upsample_add(p3, p2)  # Stage number as argument
         p2 = self.smooth_layer_2(p2)
         p2 = self.st_block_21(p2)
+        p2_attention = p2
 
         p2 = self.down_sample_3(p2)
 
@@ -111,6 +117,7 @@ class ChangeDecoder(nn.Module):
         p1 = self._upsample_add(p2, p1)
         p1 = self.smooth_layer_1(p1)
         p1 = self.st_block_11(p1)
+        p1_attention = p1
 
         change_maps = [p4_attention, p3_attention, p2_attention, p1_attention]
 
