@@ -67,7 +67,7 @@ class Trainer(object):
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
         self.deep_model = self.deep_model.cuda()
-        self.model_save_path = os.path.join(args.model_param_path, "CA_spatial")
+        self.model_save_path = os.path.join(args.model_param_path, "CA_spatial_2")
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -160,8 +160,8 @@ class Trainer(object):
                 'lovasz': 0.5,
                 'similarity': 0.05
             }
-            if itera > 10000:
-                weights['sek'] = 1
+            if itera > 25000:
+                weights['sek'] = 1.4
                 weights['bcd'] = 0.4
                 weights['ce'] = 0.25
                 weights['lovasz'] = 0.25
@@ -184,13 +184,13 @@ class Trainer(object):
             if (itera + 1) % 10 == 0:
                 print(f'iter is {itera + 1 + self.args.start_iter}, change detection loss is {weights["bcd"] * ce_loss_cd}, '
                       f'classification loss is {weights["ce"] * (ce_loss_clf_t1 + ce_loss_clf_t2) + weights["lovasz"] * (lovasz_loss_clf_t1 + lovasz_loss_clf_t2)}, '
-                      f'SeK loss is {weights["sek"] * sek_loss_value}')
+                      f'SeK loss is {1.4 * sek_loss_value}')
                 self.writer.add_scalar('Loss/ChangeDetection', weights["bcd"] * ce_loss_cd, itera + 1 + self.args.start_iter)
-                self.writer.add_scalar('Loss/Segmentation', weights["sek"] * sek_loss_value, itera + 1 + self.args.start_iter)
+                self.writer.add_scalar('Loss/Segmentation', 1.4 * sek_loss_value, itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Classification', weights["ce"] * (ce_loss_clf_t1 + ce_loss_clf_t2) + weights["lovasz"] * (lovasz_loss_clf_t1 + lovasz_loss_clf_t2), itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Similarity', weights["similarity"] * similarity_loss, itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Total', total_loss, itera + 1 + self.args.start_iter)
-                if ((itera + 1) % 1000 == 0 and (itera + 1) > 10000) or ((itera + 1) % 5000 == 0 and itera < 10000):
+                if ((itera + 1) % 1000 == 0 and (itera + 1) >25000) or ((itera + 1) % 5000 == 0 and itera < 25000):
                     self.deep_model.eval()
                     kappa_n0, Fscd, IoU_mean, Sek, oa = self.validation()
                     self.writer.add_scalar('Metrics/Kappa', kappa_n0, itera + 1 + self.args.start_iter)

@@ -23,6 +23,8 @@ from fvcore.nn import FlopCountAnalysis, flop_count_str, flop_count, parameter_c
 from RemoteSensing.changedetection.models.ChangeDecoder import ChangeDecoder
 from RemoteSensing.changedetection.models.SemanticDecoder import SemanticDecoder
 from RemoteSensing.changedetection.models.MultiScaleChangeGuidedAttention import MultiScaleChangeGuidedAttention, MultiScaleChangeGuidedAttention_StageByStage
+from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion
+
 class STMambaSCD(nn.Module):
     def __init__(self, output_cd, output_clf, pretrained,  **kwargs):
         super(STMambaSCD, self).__init__()
@@ -79,8 +81,8 @@ class STMambaSCD(nn.Module):
             **clean_kwargs
         )
 
-        self.main_clf_cd = nn.Conv2d(in_channels=128, out_channels=output_cd, kernel_size=1)
-        self.aux_clf = nn.Conv2d(in_channels=128, out_channels=output_clf, kernel_size=1)
+        self.main_clf_cd = PyramidFusion(in_channels=128, out_channels=output_cd)
+        self.aux_clf = PyramidFusion(in_channels=128, out_channels=output_clf)
 
 
     def forward(self, pre_data, post_data):
