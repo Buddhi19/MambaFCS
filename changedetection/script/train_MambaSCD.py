@@ -67,7 +67,7 @@ class Trainer(object):
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
         self.deep_model = self.deep_model.cuda()
-        self.model_save_path = os.path.join(args.model_param_path, "Modified_MambaSCD_SekLoss")
+        self.model_save_path = os.path.join(args.model_param_path, "Modified_MambaSCD_SekLoss_2")
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 

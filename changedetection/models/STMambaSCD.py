@@ -22,7 +22,8 @@ from timm.models.layers import DropPath, trunc_normal_
 from fvcore.nn import FlopCountAnalysis, flop_count_str, flop_count, parameter_count
 from RemoteSensing.changedetection.models.ChangeDecoder import ChangeDecoder
 from RemoteSensing.changedetection.models.SemanticDecoder import SemanticDecoder
-from RemoteSensing.changedetection.models.MultiScaleChangeGuidedAttention import MultiScaleChangeGuidedAttention, MultiScaleChangeGuidedAttention_StageByStage
+from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion, DepthwiseSeparableConv
+
 class STMambaSCD(nn.Module):
     def __init__(self, output_cd, output_clf, pretrained,  **kwargs):
         super(STMambaSCD, self).__init__()
@@ -79,17 +80,8 @@ class STMambaSCD(nn.Module):
             **clean_kwargs
         )
 
-        # self.change_attention_1 = MultiScaleChangeGuidedAttention_StageByStage(
-        #     channels_list=[128, 256, 512, 1024]  # Example channel sizes for each stage
-        # )
-        
-        # self.change_attention_2 = MultiScaleChangeGuidedAttention_StageByStage(
-        #     channels_list=[128, 256, 512, 1024]  # Example channel sizes for each stage
-        # )
-
-
-        self.main_clf_cd = nn.Conv2d(in_channels=128, out_channels=output_cd, kernel_size=1)
-        self.aux_clf = nn.Conv2d(in_channels=128, out_channels=output_clf, kernel_size=1)
+        self.main_clf_cd = PyramidFusion(in_channels=128, out_channels=output_cd)
+        self.aux_clf = PyramidFusion(in_channels=128, out_channels=output_clf)
 
 
     def forward(self, pre_data, post_data):
@@ -101,18 +93,6 @@ class STMambaSCD(nn.Module):
         output_bcd, change_maps = self.decoder_bcd(pre_features, post_features)
 
         change_maps = change_maps[::-1]  # Reverse the order of change maps
-
-        # for i in range(len(change_maps)):
-        #     print(f"change_maps[{i}].shape: {change_maps[i].shape}")
-
-        # for i in range(len(pre_features)):
-        #     print(f"pre_features[{i}].shape: {pre_features[i].shape}")
-        """
-        pre_features -> something with outputbcd
-        """
-        # pre_features = self.change_attention_1(pre_features, change_maps)
-        # post_features = self.change_attention_2(post_features, change_maps)
-
 
         output_T1 = self.decoder_T1(pre_features, change_maps)
         output_T2 = self.decoder_T2(post_features, change_maps)
