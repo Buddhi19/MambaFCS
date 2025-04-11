@@ -48,10 +48,10 @@ class SemanticDecoder(nn.Module):
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )           
 
-        self.trans_layer_4 = PyramidFusion(in_channels=encoder_dims[-1], out_channels=128)
-        self.trans_layer_3 = PyramidFusion(in_channels=encoder_dims[-2], out_channels=128)
-        self.trans_layer_2 = PyramidFusion(in_channels=encoder_dims[-3], out_channels=128)
-        self.trans_layer_1 = PyramidFusion(in_channels=encoder_dims[-4], out_channels=128)
+        self.trans_layer_4 = DepthwiseSeparableConv(in_channels=encoder_dims[-1], out_channels=128)
+        self.trans_layer_3 = DepthwiseSeparableConv(in_channels=encoder_dims[-2], out_channels=128)
+        self.trans_layer_2 = DepthwiseSeparableConv(in_channels=encoder_dims[-3], out_channels=128)
+        self.trans_layer_1 = DepthwiseSeparableConv(in_channels=encoder_dims[-4], out_channels=128)
 
 
         # Smooth layer
