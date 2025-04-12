@@ -82,7 +82,6 @@ class SemanticDecoder(nn.Module):
         p3 = self._upsample_add(p4, p3)
         p3 = self.smooth_layer_3_semantic(p3)
         p3 = self.st_block_3_semantic(p3)
-        p3 = ChangeGuidedAttention()(p3, change_map_3)
 
         '''
             Stage III
