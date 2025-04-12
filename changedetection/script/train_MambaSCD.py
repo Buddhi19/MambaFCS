@@ -67,7 +67,7 @@ class Trainer(object):
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
         self.deep_model = self.deep_model.cuda()
-        self.model_save_path = os.path.join(args.model_param_path,f"Modified_wo_changeguided")
+        self.model_save_path = os.path.join(args.model_param_path,f"Modified_MambaSCD_SeKLoss_3")
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -161,7 +161,7 @@ class Trainer(object):
                 'similarity': 0.05
             }
 
-            if (itera > 15000):
+            if (itera > 20000):
                 weights['sek'] = 1.4
                 weights['bcd'] = 0.4
                 weights['ce'] = 0.3
@@ -191,7 +191,7 @@ class Trainer(object):
                 self.writer.add_scalar('Loss/Classification', weights["ce"] * (ce_loss_clf_t1 + ce_loss_clf_t2) + weights["lovasz"] * (lovasz_loss_clf_t1 + lovasz_loss_clf_t2), itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Similarity', weights["similarity"] * similarity_loss, itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Total', total_loss, itera + 1 + self.args.start_iter)
-                if ((itera + 1) % 1000 == 0 and itera > 15000) or ((itera + 1) % 5000 == 0 and itera <= 15000):
+                if ((itera + 1) % 1000 == 0 and itera > 20000) or ((itera + 1) % 5000 == 0 and itera <= 20000):
                     self.deep_model.eval()
                     kappa_n0, Fscd, IoU_mean, Sek, oa = self.validation()
                     self.writer.add_scalar('Metrics/Kappa', kappa_n0, itera + 1 + self.args.start_iter)
