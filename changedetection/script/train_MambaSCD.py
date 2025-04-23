@@ -68,7 +68,7 @@ class Trainer(object):
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
         self.deep_model = self.deep_model.cuda()
-        self.model_save_path = os.path.join(args.model_param_path, "CA_spatial_fft_2")
+        self.model_save_path = os.path.join(args.model_param_path, "CA_spatial_fft_3")
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -93,7 +93,11 @@ class Trainer(object):
 
         self.scheduler = StepLR(self.optim, step_size=10000, gamma=0.5)
 
-        self.log_dir = os.path.join(main_dir,'saved_models', 'CA_spatial_fft_2')
+        if args.resume is not None:
+            self.optim.load_state_dict(torch.load(args.optim_path))
+            self.scheduler.load_state_dict(torch.load(args.scheduler_path))
+
+        self.log_dir = os.path.join(main_dir,'saved_models', 'CA_spatial_fft_3')
         if not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
 
@@ -180,6 +184,7 @@ class Trainer(object):
                 weights['similarity'] * similarity_loss
             )
 
+            total_loss = total_loss.to("cuda:0")
             # Backpropagation
             self.optim.zero_grad()
             total_loss.backward()
@@ -195,7 +200,7 @@ class Trainer(object):
                 self.writer.add_scalar('Loss/Classification', weights["ce"] * (ce_loss_clf_t1 + ce_loss_clf_t2) + weights["lovasz"] * (lovasz_loss_clf_t1 + lovasz_loss_clf_t2), itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Similarity', weights["similarity"] * similarity_loss, itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Total', total_loss, itera + 1 + self.args.start_iter)
-                if ((itera + 1) % 5000 == 0 and (itera + 1) >25000):
+                if ((itera + 1) % 5000 == 0 and itera + 1 >= 25000):
                     self.deep_model.eval()
                     kappa_n0, Fscd, IoU_mean, Sek, oa = self.validation()
                     self.writer.add_scalar('Metrics/Kappa', kappa_n0, itera + 1 + self.args.start_iter)
@@ -206,6 +211,11 @@ class Trainer(object):
                     if Sek > best_kc:
                         torch.save(self.deep_model.state_dict(),
                                     os.path.join(self.model_save_path, f'{itera + 1 + self.args.start_iter}_model_{Sek:.3f}.pth'))
+                        # save adamW optimizer
+                        torch.save(self.optim.state_dict(),
+                                    os.path.join(self.model_save_path, f'{itera + 1 + self.args.start_iter}_optim_{Sek:.3f}.pth'))
+                        torch.save(self.scheduler.state_dict(),
+                                    os.path.join(self.model_save_path, f'{itera + 1 + self.args.start_iter}_scheduler_{Sek:.3f}.pth'))
                         best_kc = Sek
                         best_round = [kappa_n0, Fscd, IoU_mean, Sek, oa ]
                     self.deep_model.train()
