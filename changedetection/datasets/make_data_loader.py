@@ -7,6 +7,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 import random
+import cv2
 
 import RemoteSensing.changedetection.datasets.imutils as imutils
 
@@ -46,6 +47,11 @@ class ChangeDetectionDatset(Dataset):
             pre_img, post_img, label = imutils.random_fliplr(pre_img, post_img, label)
             pre_img, post_img, label = imutils.random_flipud(pre_img, post_img, label)
             pre_img, post_img, label = imutils.random_rot(pre_img, post_img, label)
+            pre_img= imutils.random_photometric_imgs(pre_img)
+            post_img = imutils.random_photometric_imgs(post_img)
+
+        else:
+            pre_img, post_img, label = imutils.random_crop_new(pre_img, post_img, label, self.crop_size)
 
         pre_img = imutils.normalize_img(pre_img)  # imagenet normalization
         pre_img = np.transpose(pre_img, (2, 0, 1))
@@ -92,7 +98,7 @@ class SemanticChangeDetectionDatset(Dataset):
 
     def __transforms(self, aug, pre_img, post_img, cd_label, t1_label, t2_label):
         if aug:
-            pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_crop_mcd(pre_img, post_img, cd_label, t1_label, t2_label, self.crop_size)
+            # pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_crop_mcd(pre_img, post_img, cd_label, t1_label, t2_label, self.crop_size)
             pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_fliplr_mcd(pre_img, post_img, cd_label, t1_label, t2_label)
             pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_flipud_mcd(pre_img, post_img, cd_label, t1_label, t2_label)
             pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_rot_mcd(pre_img, post_img, cd_label, t1_label, t2_label) 
@@ -151,7 +157,7 @@ class SemanticChangeDetectionDatset_LandSat(Dataset):
 
     def __transforms(self, aug, pre_img, post_img, cd_label, t1_label, t2_label):
         if aug:
-            pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_crop_mcd(pre_img, post_img, cd_label, t1_label, t2_label, self.crop_size)
+            # pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_crop_mcd(pre_img, post_img, cd_label, t1_label, t2_label, self.crop_size)
             pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_fliplr_mcd(pre_img, post_img, cd_label, t1_label, t2_label)
             pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_flipud_mcd(pre_img, post_img, cd_label, t1_label, t2_label)
             pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_rot_mcd(pre_img, post_img, cd_label, t1_label, t2_label)
@@ -351,7 +357,7 @@ def make_data_loader(args, **kwargs):  # **kwargs could be omitted
     if 'SYSU' in args.dataset or 'LEVIR-CD+' in args.dataset or 'WHU' in args.dataset:
         dataset = ChangeDetectionDatset(args.train_dataset_path, args.train_data_name_list, args.crop_size, args.max_iters, args.type)
         # train_sampler = DistributedSampler(dataset, shuffle=True)
-        data_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, **kwargs, num_workers=16,
+        data_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, **kwargs, num_workers=8,
                                  drop_last=False)
         return data_loader
     elif 'xBD' in args.dataset:

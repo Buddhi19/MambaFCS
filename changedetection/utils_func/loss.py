@@ -118,14 +118,14 @@ def ce2_dice1(input, target, ignore_index=255):
     logits_positive = input[:, 1, :, :]  # Shape: [N, H, W]
 
     bce_loss = weighted_BCE_logits(logits_positive, labels_bn)
-    loss = 1 * ce_loss + 0.15* dice_loss_ + 0.35 * bce_loss
+    loss = 1 * ce_loss + 0.35 * bce_loss + 0.15* dice_loss_ 
     return loss
 
 def ce2_dice1_multiclass(input, target, weight=None):
     ce_loss = F.cross_entropy(input, target, ignore_index=255)
     target2 = target.clone()
     dice_loss_ = dice_loss_multiclass(input, target2)
-    loss = ce_loss + 0.25 * dice_loss_ 
+    loss = ce_loss #+ 0.25 * dice_loss_ 
     return loss
 
 
@@ -293,6 +293,12 @@ class SeK_Loss(nn.Module):
         
         # 3. Combined Loss ----------------------------------------------------
         sek_value = kappa * torch.exp(self.beta * miou)
-        loss = 1 - sek_value + self.gamma * (1 - miou)
+        
+        log_sek = (sek_value + self.eps).log()
+        # log of miou
+        self.eps = 1e-6
+        log_miou = (miou + self.eps).log()
+        # final loss: -log(sek_value) - gamma * log(miou)
+        loss = -log_sek - self.gamma * log_miou
         
         return torch.clamp(loss, min=0.0) 

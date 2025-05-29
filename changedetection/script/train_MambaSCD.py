@@ -16,7 +16,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from RemoteSensing.changedetection.datasets.make_data_loader import SemanticChangeDetectionDatset, make_data_loader
+from RemoteSensing.changedetection.datasets.make_data_loader import SemanticChangeDetectionDatset, make_data_loader, SemanticChangeDetectionDatset_LandSat
 from RemoteSensing.changedetection.utils_func.metrics import Evaluator
 from RemoteSensing.changedetection.models.STMambaSCD import STMambaSCD
 import RemoteSensing.changedetection.utils_func.lovasz_loss as L
@@ -36,7 +36,7 @@ class Trainer(object):
 
         self.deep_model = STMambaSCD(
             output_cd = 2, 
-            output_clf = 7,
+            output_clf = 7 if self.args.dataset == "SECOND" else 10,
             pretrained=args.pretrained_weight_path,
             patch_size=config.MODEL.VSSM.PATCH_SIZE, 
             in_chans=config.MODEL.VSSM.IN_CHANS, 
@@ -68,7 +68,7 @@ class Trainer(object):
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
         self.deep_model = self.deep_model.cuda()
-        self.model_save_path = os.path.join(args.model_param_path, "CA_spatial_fft_3")
+        self.model_save_path = os.path.join(args.model_param_path, f'CA_spatial_fft_17_7{args.dataset}')
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -97,7 +97,7 @@ class Trainer(object):
             self.optim.load_state_dict(torch.load(args.optim_path))
             self.scheduler.load_state_dict(torch.load(args.scheduler_path))
 
-        self.log_dir = os.path.join(main_dir,'saved_models', 'CA_spatial_fft_3')
+        self.log_dir = os.path.join(main_dir,'saved_models', f'CA_spatial_fft_17_7{args.dataset}')
         if not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
 
@@ -110,7 +110,7 @@ class Trainer(object):
         elem_num = len(self.train_data_loader)
         train_enumerator = enumerate(self.train_data_loader)
         sek_criterion = SeK_Loss(
-            num_classes=7,  # SECOND dataset classes (exclude non-change)
+            num_classes=7 if self.args.dataset == "SECOND" else 10,  # SECOND dataset classes (exclude non-change)
             non_change_class=0,
             beta=1.5
         ).cuda()
@@ -144,9 +144,9 @@ class Trainer(object):
 
             # ================== Auxiliary Losses ==================
             # 1. Semantic segmentation losses
-            ce_loss_cd = ce2_dice1(output_1, label_cd)
-            ce_loss_clf_t1 = ce2_dice1_multiclass(output_semantic_t1, label_clf_t1)
-            ce_loss_clf_t2 = ce2_dice1_multiclass(output_semantic_t2, label_clf_t2)
+            ce_loss_cd = F.cross_entropy(output_1, label_cd, ignore_index=255)
+            ce_loss_clf_t1 = F.cross_entropy(output_semantic_t1, label_clf_t1, ignore_index=255)
+            ce_loss_clf_t2 = F.cross_entropy(output_semantic_t2, label_clf_t2, ignore_index=255)
             
             # 2. Boundary refinement
             lovasz_loss_cd = L.lovasz_softmax(F.softmax(output_1, dim=1), label_cd, ignore=255)
@@ -165,12 +165,24 @@ class Trainer(object):
             weights = {
                 'sek': 0,
                 'bcd': 1,
+                'ce': 1,
+                'lovasz': 1,
+                'similarity': 0.05
+            }
+            weights_second = {
+                'sek': 0,
+                'bcd': 1,
                 'ce': 0.5,
                 'lovasz': 0.5,
                 'similarity': 0.05
             }
-            if itera + self.args.start_iter > 25000:
-                weights['sek'] = 1.4
+            if self.args.dataset == 'SECOND':
+                weights = weights_second
+            
+            SEK_START_ITER = 15000 if self.args.dataset == 'SECOND' else 50000
+
+            if itera + self.args.start_iter > SEK_START_ITER:
+                weights['sek'] = 0.5
                 weights['bcd'] = 0.4
                 weights['ce'] = 0.25
                 weights['lovasz'] = 0.25
@@ -184,7 +196,7 @@ class Trainer(object):
                 weights['similarity'] * similarity_loss
             )
 
-            total_loss = total_loss.to("cuda:0")
+            
             # Backpropagation
             self.optim.zero_grad()
             total_loss.backward()
@@ -200,7 +212,7 @@ class Trainer(object):
                 self.writer.add_scalar('Loss/Classification', weights["ce"] * (ce_loss_clf_t1 + ce_loss_clf_t2) + weights["lovasz"] * (lovasz_loss_clf_t1 + lovasz_loss_clf_t2), itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Similarity', weights["similarity"] * similarity_loss, itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Total', total_loss, itera + 1 + self.args.start_iter)
-                if ((itera + 1) % 5000 == 0 and itera + 1 >= 25000):
+                if ((itera + 1) % 5000 == 0 and (itera + 1 + self.args.start_iter) >= 25000):
                     self.deep_model.eval()
                     kappa_n0, Fscd, IoU_mean, Sek, oa = self.validation()
                     self.writer.add_scalar('Metrics/Kappa', kappa_n0, itera + 1 + self.args.start_iter)
@@ -226,6 +238,10 @@ class Trainer(object):
     def validation(self):
         print('---------starting evaluation-----------')
         dataset = SemanticChangeDetectionDatset(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
+
+        if self.args.dataset == 'LandSat':
+            dataset = SemanticChangeDetectionDatset_LandSat(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
+
         val_data_loader = DataLoader(dataset, batch_size=1, num_workers=4, drop_last=False)
         torch.cuda.empty_cache()
         acc_meter = AverageMeter()
@@ -271,61 +287,9 @@ class Trainer(object):
                     acc = (acc_A + acc_B) * 0.5
                     acc_meter.update(acc)
 
-        kappa_n0, Fscd, IoU_mean, Sek = SCDD_eval_all(preds_all, labels_all, 37)
+        kappa_n0, Fscd, IoU_mean, Sek = SCDD_eval_all(preds_all, labels_all, 7 if self.args.dataset == "SECOND" else 10)
         print(f'Kappa coefficient rate is {kappa_n0}, F1 is {Fscd}, OA is {acc_meter.avg}, '
               f'mIoU is {IoU_mean}, SeK is {Sek}')
         
         return kappa_n0, Fscd, IoU_mean, Sek, acc_meter.avg
 
-
-def main():
-    parser = argparse.ArgumentParser(description="Training on SECOND dataset")
-    parser.add_argument('--cfg', type=str, default='/home/songjian/project/RemoteSensing/VMamba/classification/configs/vssm1/vssm_base_224.yaml')
-    parser.add_argument(
-        "--opts",
-        help="Modify config options by adding 'KEY VALUE' pairs. ",
-        default=None,
-        nargs='+',
-    )
-    parser.add_argument('--pretrained_weight_path', type=str)
-
-    parser.add_argument('--dataset', type=str, default='SECOND')
-    parser.add_argument('--type', type=str, default='train')
-    parser.add_argument('--train_dataset_path', type=str, default='/data/ggeoinfo/datasets/xBD/train')
-    parser.add_argument('--train_data_list_path', type=str, default='/data/ggeoinfo/datasets/xBD/xBD_list/train_all.txt')
-    parser.add_argument('--test_dataset_path', type=str, default='/data/ggeoinfo/datasets/xBD/test')
-    parser.add_argument('--test_data_list_path', type=str, default='/data/ggeoinfo/datasets/xBD/xBD_list/val_all.txt')
-    parser.add_argument('--shuffle', type=bool, default=True)
-    parser.add_argument('--batch_size', type=int, default=4)
-    parser.add_argument('--crop_size', type=int, default=512)
-    parser.add_argument('--train_data_name_list', type=list)
-    parser.add_argument('--test_data_name_list', type=list)
-    parser.add_argument('--start_iter', type=int, default=0)
-    parser.add_argument('--cuda', type=bool, default=True)
-    parser.add_argument('--max_iters', type=int, default=240000)
-    parser.add_argument('--model_type', type=str, default='MambaSCD')
-    parser.add_argument('--model_param_path', type=str, default='../saved_models')
-
-    parser.add_argument('--resume', type=str)
-    parser.add_argument('--learning_rate', type=float, default=1e-4)
-    parser.add_argument('--momentum', type=float, default=0.9)
-    parser.add_argument('--weight_decay', type=float, default=5e-4)
-    parser.add_argument('--device', type=str, default=0)
-
-    args = parser.parse_args()
-    with open(args.train_data_list_path, "r") as f:
-        # data_name_list = f.read()
-        data_name_list = [data_name.strip() for data_name in f]
-    args.train_data_name_list = data_name_list
-
-    with open(args.test_data_list_path, "r") as f:
-        # data_name_list = f.read()
-        test_data_name_list = [data_name.strip() for data_name in f]
-    args.test_data_name_list = test_data_name_list
-
-    trainer = Trainer(args)
-    trainer.training()
-
-
-if __name__ == "__main__":
-    main()

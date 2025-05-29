@@ -222,7 +222,7 @@ class CrossAttentionFusion(nn.Module):
     • Channel & spatial gating
     """
     def __init__(self, in_channels, use_diff=True,
-                 cross_attn_heads=4, freq_ratio=0.25):
+                 cross_attn_heads=4, freq_ratio=1):
         super().__init__()
         self.use_diff = use_diff
         c_freq = int(in_channels * freq_ratio)
@@ -263,17 +263,17 @@ class CrossAttentionFusion(nn.Module):
         fused = self.reduce_relu(self.reduce_bn(self.reduce_conv(cat)))  # [B,C,H,W]
 
         # ─── Bidirectional cross attention ────────────────────────
-        B, C, H, W = fused.shape
-        pre_flat  = rearrange(pre_feat,  'b c h w -> b (h w) c')
-        post_flat = rearrange(post_feat, 'b c h w -> b (h w) c')
+        # B, C, H, W = fused.shape
+        # pre_flat  = rearrange(pre_feat,  'b c h w -> b (h w) c')
+        # post_flat = rearrange(post_feat, 'b c h w -> b (h w) c')
 
-        fwd = self.cross_attn(pre_flat,  post_flat)
-        bwd = self.cross_attn(post_flat, pre_flat)
+        # fwd = self.cross_attn(pre_flat,  post_flat)
+        # bwd = self.cross_attn(post_flat, pre_flat)
 
-        fwd = rearrange(fwd, 'b (h w) c -> b c h w', h=H, w=W)
-        bwd = rearrange(bwd, 'b (h w) c -> b c h w', h=H, w=W)
+        # fwd = rearrange(fwd, 'b (h w) c -> b c h w', h=H, w=W)
+        # bwd = rearrange(bwd, 'b (h w) c -> b c h w', h=H, w=W)
 
-        fused = fused + fwd + bwd
+        fused = fused #+ fwd + bwd
 
         # ─── Gating ───────────────────────────────────────────────
         fused = self.ch_gate(fused)
