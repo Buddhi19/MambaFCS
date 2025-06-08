@@ -262,7 +262,7 @@ class CrossAttentionFusion(nn.Module):
 
         fused = self.reduce_relu(self.reduce_bn(self.reduce_conv(cat)))  # [B,C,H,W]
 
-        # ─── Bidirectional cross attention ────────────────────────
+        # # ─── Bidirectional cross attention ────────────────────────
         # B, C, H, W = fused.shape
         # pre_flat  = rearrange(pre_feat,  'b c h w -> b (h w) c')
         # post_flat = rearrange(post_feat, 'b c h w -> b (h w) c')

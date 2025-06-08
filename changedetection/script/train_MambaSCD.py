@@ -36,7 +36,7 @@ class Trainer(object):
 
         self.deep_model = STMambaSCD(
             output_cd = 2, 
-            output_clf = 7 if self.args.dataset == "SECOND" else 10,
+            output_clf = 7 if self.args.dataset == "SECOND" else 5,
             pretrained=args.pretrained_weight_path,
             patch_size=config.MODEL.VSSM.PATCH_SIZE, 
             in_chans=config.MODEL.VSSM.IN_CHANS, 
@@ -67,8 +67,10 @@ class Trainer(object):
             gmlp=config.MODEL.VSSM.GMLP,
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
+
         self.deep_model = self.deep_model.cuda()
-        self.model_save_path = os.path.join(args.model_param_path, f'CA_spatial_fft_17_7{args.dataset}')
+
+        self.model_save_path = os.path.join(args.model_param_path, f'CA_spatial_fft_18{args.dataset}')
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -97,7 +99,7 @@ class Trainer(object):
             self.optim.load_state_dict(torch.load(args.optim_path))
             self.scheduler.load_state_dict(torch.load(args.scheduler_path))
 
-        self.log_dir = os.path.join(main_dir,'saved_models', f'CA_spatial_fft_17_7{args.dataset}')
+        self.log_dir = os.path.join(main_dir,'saved_models', f'CA_spatial_fft_18{args.dataset}')
         if not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
 
@@ -179,11 +181,11 @@ class Trainer(object):
             if self.args.dataset == 'SECOND':
                 weights = weights_second
             
-            SEK_START_ITER = 15000 if self.args.dataset == 'SECOND' else 50000
+            SEK_START_ITER = 15000 if self.args.dataset == 'SECOND' else 250000
 
             if itera + self.args.start_iter > SEK_START_ITER:
                 weights['sek'] = 0.5
-                weights['bcd'] = 0.4
+                weights['bcd'] = 0.5
                 weights['ce'] = 0.25
                 weights['lovasz'] = 0.25
                 weights['similarity'] = 0.025
@@ -212,7 +214,7 @@ class Trainer(object):
                 self.writer.add_scalar('Loss/Classification', weights["ce"] * (ce_loss_clf_t1 + ce_loss_clf_t2) + weights["lovasz"] * (lovasz_loss_clf_t1 + lovasz_loss_clf_t2), itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Similarity', weights["similarity"] * similarity_loss, itera + 1 + self.args.start_iter)
                 self.writer.add_scalar('Loss/Total', total_loss, itera + 1 + self.args.start_iter)
-                if ((itera + 1) % 5000 == 0 and (itera + 1 + self.args.start_iter) >= 25000):
+                if ((itera + 1) % 5000 == 0):
                     self.deep_model.eval()
                     kappa_n0, Fscd, IoU_mean, Sek, oa = self.validation()
                     self.writer.add_scalar('Metrics/Kappa', kappa_n0, itera + 1 + self.args.start_iter)
@@ -223,11 +225,6 @@ class Trainer(object):
                     if Sek > best_kc:
                         torch.save(self.deep_model.state_dict(),
                                     os.path.join(self.model_save_path, f'{itera + 1 + self.args.start_iter}_model_{Sek:.3f}.pth'))
-                        # save adamW optimizer
-                        torch.save(self.optim.state_dict(),
-                                    os.path.join(self.model_save_path, f'{itera + 1 + self.args.start_iter}_optim_{Sek:.3f}.pth'))
-                        torch.save(self.scheduler.state_dict(),
-                                    os.path.join(self.model_save_path, f'{itera + 1 + self.args.start_iter}_scheduler_{Sek:.3f}.pth'))
                         best_kc = Sek
                         best_round = [kappa_n0, Fscd, IoU_mean, Sek, oa ]
                     self.deep_model.train()
@@ -237,7 +234,9 @@ class Trainer(object):
 
     def validation(self):
         print('---------starting evaluation-----------')
-        dataset = SemanticChangeDetectionDatset(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
+        dataset = None
+        if self.args.dataset == 'SECOND':
+            dataset = SemanticChangeDetectionDatset(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
 
         if self.args.dataset == 'LandSat':
             dataset = SemanticChangeDetectionDatset_LandSat(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
