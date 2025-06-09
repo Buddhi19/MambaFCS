@@ -11,8 +11,6 @@ class SemanticDecoder(nn.Module):
         super(SemanticDecoder, self).__init__()
 
         self.CHANGE_GUIDED_ATTENTION = True
-        self.USE_FREQUENCY = True
-
         # Define the VSS Block for Spatio-temporal relationship modelling
         self.st_block_4_semantic = nn.Sequential(
             Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
@@ -55,14 +53,6 @@ class SemanticDecoder(nn.Module):
         self.down_sample_2 = PyramidFusion(in_channels=encoder_dims[-2], out_channels=encoder_dims[-3])
         self.down_sample_3 = PyramidFusion(in_channels=encoder_dims[-3], out_channels=encoder_dims[-4])
 
-
-        if self.USE_FREQUENCY:
-            self.freq4 = FFTBranch(encoder_dims[-1], encoder_dims[-1])
-            self.freq3 = FFTBranch(encoder_dims[-2], encoder_dims[-2])
-            self.freq2 = FFTBranch(encoder_dims[-3], encoder_dims[-3])
-            self.freq1 = FFTBranch(encoder_dims[-4], encoder_dims[-4])
-
-
         # Smooth layer
         self.smooth_layer_3_semantic = ResBlock(in_channels=encoder_dims[-2], out_channels=encoder_dims[-2], stride=1) 
         self.smooth_layer_2_semantic = ResBlock(in_channels=encoder_dims[-3], out_channels=encoder_dims[-3], stride=1)
@@ -84,9 +74,6 @@ class SemanticDecoder(nn.Module):
         if self.CHANGE_GUIDED_ATTENTION:
             p4 = ChangeGuidedAttention()(feat_4, change_map_4)
 
-        if self.USE_FREQUENCY:
-            p4 = p4 + self.freq4(p4)
-
         p4 = self.st_block_4_semantic(p4)
 
         p4 = self.down_sample_1(p4)
@@ -96,9 +83,6 @@ class SemanticDecoder(nn.Module):
         p3 = feat_3
         if self.CHANGE_GUIDED_ATTENTION:
             p3 = ChangeGuidedAttention()(feat_3, change_map_3)
-
-        if self.USE_FREQUENCY:
-            p3 = p3 + self.freq3(p3)
         
         p3 = self._upsample_add(p4, p3)
         p3 = self.smooth_layer_3_semantic(p3)
@@ -112,9 +96,6 @@ class SemanticDecoder(nn.Module):
         if self.CHANGE_GUIDED_ATTENTION:
             p2 = ChangeGuidedAttention()(feat_2, change_map_2)
 
-        if self.USE_FREQUENCY:
-            p2 = p2 + self.freq2(p2)
-
         p2 = self._upsample_add(p3, p2)
         p2 = self.smooth_layer_2_semantic(p2)
         p2 = self.st_block_2_semantic(p2)
@@ -127,9 +108,6 @@ class SemanticDecoder(nn.Module):
         p1 = feat_1
         if self.CHANGE_GUIDED_ATTENTION:
             p1 = ChangeGuidedAttention()(feat_1, change_map_1)
-
-        if self.USE_FREQUENCY:
-            p1 = p1 + self.freq1(p1)
 
         p1 = self._upsample_add(p2, p1)
         p1 = self.smooth_layer_1_semantic(p1)
