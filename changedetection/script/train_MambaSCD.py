@@ -36,7 +36,7 @@ class Trainer(object):
 
         self.deep_model = STMambaSCD(
             output_cd = 2, 
-            output_clf = 7 if self.args.dataset == "SECOND" else 5,
+            output_clf = args.num_classes,
             pretrained=args.pretrained_weight_path,
             patch_size=config.MODEL.VSSM.PATCH_SIZE, 
             in_chans=config.MODEL.VSSM.IN_CHANS, 
@@ -70,7 +70,7 @@ class Trainer(object):
 
         self.deep_model = self.deep_model.cuda()
 
-        self.model_save_path = os.path.join(args.model_param_path, f'CA_spatial_fft_18{args.dataset}')
+        self.model_save_path = os.path.join(args.model_param_path, f'CA_spatial_fft_19{args.dataset}')
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -99,7 +99,7 @@ class Trainer(object):
             self.optim.load_state_dict(torch.load(args.optim_path))
             self.scheduler.load_state_dict(torch.load(args.scheduler_path))
 
-        self.log_dir = os.path.join(main_dir,'saved_models', f'CA_spatial_fft_18{args.dataset}')
+        self.log_dir = os.path.join(main_dir,'saved_models', f'CA_spatial_fft_19{args.dataset}')
         if not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
 
@@ -112,7 +112,7 @@ class Trainer(object):
         elem_num = len(self.train_data_loader)
         train_enumerator = enumerate(self.train_data_loader)
         sek_criterion = SeK_Loss(
-            num_classes=7 if self.args.dataset == "SECOND" else 10,  # SECOND dataset classes (exclude non-change)
+            num_classes=self.args.num_classes,  # SECOND dataset classes (exclude non-change)
             non_change_class=0,
             beta=1.5
         ).cuda()
@@ -166,7 +166,7 @@ class Trainer(object):
             # ================== Loss Weighting ==================
             weights = {
                 'sek': 0,
-                'bcd': 1,
+                'bcd': 0,
                 'ce': 1,
                 'lovasz': 1,
                 'similarity': 0.05
@@ -185,10 +185,10 @@ class Trainer(object):
 
             if itera + self.args.start_iter > SEK_START_ITER:
                 weights['sek'] = 0.5
-                weights['bcd'] = 0.5
-                weights['ce'] = 0.25
-                weights['lovasz'] = 0.25
-                weights['similarity'] = 0.025
+                weights['bcd'] = 1
+                weights['ce'] = 0.5
+                weights['lovasz'] = 0.5
+                weights['similarity'] = 0.05
 
             total_loss = (
                 weights['sek'] * sek_loss_value +
