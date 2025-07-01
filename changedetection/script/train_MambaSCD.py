@@ -23,7 +23,7 @@ import RemoteSensing.changedetection.utils_func.lovasz_loss as L
 from torch.optim.lr_scheduler import StepLR
 from RemoteSensing.changedetection.utils_func.mcd_utils import accuracy, SCDD_eval_all, AverageMeter
 
-from RemoteSensing.changedetection.utils_func.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass, SeK_Loss
+from RemoteSensing.changedetection.utils_func.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass, SeK_Loss, SEK_loss_from_eval
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -70,7 +70,7 @@ class Trainer(object):
 
         self.deep_model = self.deep_model.cuda()
 
-        self.model_save_path = os.path.join(args.model_param_path, f'CA_spatial_fft_19{args.dataset}')
+        self.model_save_path = os.path.join(args.model_param_path, f'CA_spatial_fft_19_wo_CGA{args.dataset}')
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -99,7 +99,7 @@ class Trainer(object):
             self.optim.load_state_dict(torch.load(args.optim_path))
             self.scheduler.load_state_dict(torch.load(args.scheduler_path))
 
-        self.log_dir = os.path.join(main_dir,'saved_models', f'CA_spatial_fft_19{args.dataset}')
+        self.log_dir = os.path.join(main_dir,'saved_models', f'CA_spatial_fft_19_wo_CGA{args.dataset}')
         if not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
 
@@ -111,11 +111,11 @@ class Trainer(object):
         torch.cuda.empty_cache()
         elem_num = len(self.train_data_loader)
         train_enumerator = enumerate(self.train_data_loader)
-        sek_criterion = SeK_Loss(
-            num_classes=self.args.num_classes,  # SECOND dataset classes (exclude non-change)
-            non_change_class=0,
-            beta=1.5
-        ).cuda()
+        # sek_criterion = SeK_Loss(
+        #     num_classes=self.args.num_classes,  # SECOND dataset classes (exclude non-change)
+        #     non_change_class=0,
+        #     beta=1.5
+        # ).cuda()
         for _ in tqdm(range(elem_num)):
             itera, data = train_enumerator.__next__()
             pre_change_imgs, post_change_imgs, label_cd, label_clf_t1, label_clf_t2, _ = data
@@ -136,13 +136,13 @@ class Trainer(object):
             pre_change_imgs = pre_change_imgs.float()
             post_change_imgs = post_change_imgs.float()
 
-            sek_loss_value = sek_criterion(
-                output_semantic_t1, 
-                output_semantic_t2,
-                label_clf_t1,
-                label_clf_t2,
-                change_mask
-            )
+            # sek_loss_value = sek_criterion(
+            #     output_semantic_t1, 
+            #     output_semantic_t2,
+            #     label_clf_t1,
+            #     label_clf_t2,
+            #     change_mask
+            # )
 
             # ================== Auxiliary Losses ==================
             # 1. Semantic segmentation losses
@@ -163,6 +163,15 @@ class Trainer(object):
                 reduction='mean'
             )
 
+            sek_loss_value = SEK_loss_from_eval(
+                output_semantic_t1, 
+                output_semantic_t2,
+                label_clf_t1,
+                label_clf_t2,
+                output_1,
+                self.args.num_classes
+            )
+
             # ================== Loss Weighting ==================
             weights = {
                 'sek': 0,
@@ -172,7 +181,7 @@ class Trainer(object):
                 'similarity': 0.05
             }
             weights_second = {
-                'sek': 0,
+                'sek': 0.3,
                 'bcd': 1,
                 'ce': 0.5,
                 'lovasz': 0.5,
@@ -184,7 +193,7 @@ class Trainer(object):
             SEK_START_ITER = 15000 if self.args.dataset == 'SECOND' else 250000
 
             if itera + self.args.start_iter > SEK_START_ITER:
-                weights['sek'] = 0.5
+                weights['sek'] = 1
                 weights['bcd'] = 1
                 weights['ce'] = 0.5
                 weights['lovasz'] = 0.5
@@ -286,7 +295,7 @@ class Trainer(object):
                     acc = (acc_A + acc_B) * 0.5
                     acc_meter.update(acc)
 
-        kappa_n0, Fscd, IoU_mean, Sek = SCDD_eval_all(preds_all, labels_all, 7 if self.args.dataset == "SECOND" else 10)
+        kappa_n0, Fscd, IoU_mean, Sek = SCDD_eval_all(preds_all, labels_all, 37)
         print(f'Kappa coefficient rate is {kappa_n0}, F1 is {Fscd}, OA is {acc_meter.avg}, '
               f'mIoU is {IoU_mean}, SeK is {Sek}')
         

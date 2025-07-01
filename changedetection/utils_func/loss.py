@@ -14,6 +14,7 @@ from scipy.ndimage import distance_transform_edt
 import torchvision.models as models
 
 from RemoteSensing.changedetection.utils_func.utils import simplex, class2one_hot, uniq
+from RemoteSensing.changedetection.utils_func.mcd_utils import SCDD_eval, SCDD_eval_all
 
 def uniq(a: Tensor) -> Set:
     return set(torch.unique(a.cpu()).numpy())
@@ -302,3 +303,29 @@ class SeK_Loss(nn.Module):
         loss = -log_sek - self.gamma * log_miou
         
         return torch.clamp(loss, min=0.0) 
+
+def SEK_loss_from_eval(pred_t1, pred_t2, label_t1, label_t2, change_mask, num_classes):
+
+    label_t1 = label_t1.cuda().long().cpu().numpy()
+    label_t2 = label_t2.cuda().long().cpu().numpy()
+
+    pred_t1 = torch.argmax(pred_t1, dim=1).cpu().numpy()
+    pred_t2 = torch.argmax(pred_t2, dim=1).cpu().numpy()
+
+    change_mask = torch.argmax(change_mask, axis=1).cpu().numpy()  # Assuming change_mask is one-hot encoded
+
+    pred_t1[change_mask == 0] = 0  # Set unchanged pixels to 0
+    pred_t2[change_mask == 0] = 0  # Set unchanged pixels to 0
+
+    Fscd_1, IoU_1, SeK_1 = SCDD_eval(pred_t1, label_t1, 37)
+    Fscd_2, IoU_2, SeK_2 = SCDD_eval(pred_t2, label_t2, 37)
+
+    average_sek = (SeK_1 + SeK_2) / 2
+    average_IoU = (IoU_1 + IoU_2) / 2
+
+    average_sek = torch.tensor(average_sek, dtype=torch.float32).cuda()
+    average_IoU = torch.tensor(average_IoU, dtype=torch.float32).cuda()
+
+    sek_loss = -torch.log(average_sek + 1e-6) - 0.5 * torch.log(average_IoU + 1e-6)
+
+    return torch.clamp(sek_loss, min=0.0)
