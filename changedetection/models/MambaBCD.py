@@ -68,7 +68,7 @@ class STMambaBCD(nn.Module):
         post_features = self.encoder(post_data)
 
         # Decoder processing - passing encoder outputs to the decoder
-        output = self.decoder(pre_features, post_features)
+        output, _ = self.decoder(pre_features, post_features)
 
         output = self.main_clf(output)
         output = F.interpolate(output, size=pre_data.size()[-2:], mode='bilinear')
