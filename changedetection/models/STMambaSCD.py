@@ -22,7 +22,8 @@ from timm.models.layers import DropPath, trunc_normal_
 from fvcore.nn import FlopCountAnalysis, flop_count_str, flop_count, parameter_count
 from RemoteSensing.changedetection.models.ChangeDecoder import ChangeDecoder
 from RemoteSensing.changedetection.models.SemanticDecoder import SemanticDecoder
-from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion, DepthwiseSeparableConv
+from RemoteSensing.changedetection.models.MultiScaleChangeGuidedAttention import MultiScaleChangeGuidedAttention, MultiScaleChangeGuidedAttention_StageByStage
+from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion
 
 class STMambaSCD(nn.Module):
     def __init__(self, output_cd, output_clf, pretrained,  **kwargs):

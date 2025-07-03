@@ -1,6 +1,7 @@
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname((os.path.dirname(__file__))))))
+main_dir = os.path.dirname(os.path.dirname(os.path.dirname((os.path.dirname(__file__)))))
+sys.path.append(main_dir)
 
 import argparse
 import os
@@ -18,10 +19,10 @@ from tqdm import tqdm
 from RemoteSensing.changedetection.datasets.make_data_loader import ChangeDetectionDatset, make_data_loader
 from RemoteSensing.changedetection.utils_func.metrics import Evaluator
 from RemoteSensing.changedetection.models.MambaBCD import STMambaBCD
+from RemoteSensing.changedetection.utils_func.loss import ce2_dice1
 
 import RemoteSensing.changedetection.utils_func.lovasz_loss as L
 
-from ChangeDetection.CDlib.loss import ce2_dice1
 from torch.utils.tensorboard import SummaryWriter
 
 class Trainer(object):
@@ -65,9 +66,9 @@ class Trainer(object):
             use_checkpoint=config.TRAIN.USE_CHECKPOINT,
             ) 
         self.deep_model = self.deep_model.cuda()
-        file_name = input()
-        self.model_save_path = os.path.join(args.model_param_path, args.dataset,
-                                            args.model_type + file_name)
+        
+        self.model_save_path = os.path.join(args.model_param_path, "LEVIR_fft_small")
+
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -90,7 +91,11 @@ class Trainer(object):
                                  lr=args.learning_rate,
                                  weight_decay=args.weight_decay)
 
-        self.writer = SummaryWriter(log_dir=os.path.join(self.model_save_path, 'logs'))
+        self.log_dir = os.path.join(main_dir,'saved_models', 'LEVIR_fft_small')
+        if not os.path.exists(self.log_dir):
+            os.makedirs(self.log_dir)
+
+        self.writer = SummaryWriter(log_dir=os.path.join(self.log_dir, 'logs'))
 
     def training(self):
         best_kc = 0.0
@@ -109,7 +114,9 @@ class Trainer(object):
             output_1 = self.deep_model(pre_change_imgs, post_change_imgs)
 
             self.optim.zero_grad()
+            
             ce_loss_1 = ce2_dice1(output_1, labels)
+
             lovasz_loss = L.lovasz_softmax(F.softmax(output_1, dim=1), labels, ignore=255)
             
 
@@ -131,9 +138,9 @@ class Trainer(object):
                     self.writer.add_scalar('CDMetrics/F1_score', f1_score, itera + 1)
                     self.writer.add_scalar('CDMetrics/IoU', iou, itera + 1)
                     self.writer.add_scalar('CDMetrics/Kappa', kc, itera + 1)
-                    if kc > best_kc and oa> 0.92:
+                    if kc > best_kc:
                         torch.save(self.deep_model.state_dict(),
-                                   os.path.join(self.model_save_path, f'{itera + 1}_model.pth'))
+                                   os.path.join(self.model_save_path, f'{itera + 1}_model_{kc}.pth'))
                         best_kc = kc
                         best_round = [rec, pre, oa, f1_score, iou, kc]
                     self.deep_model.train()
@@ -145,7 +152,7 @@ class Trainer(object):
         print('---------starting evaluation-----------')
         self.evaluator.reset()
         dataset = ChangeDetectionDatset(self.args.test_dataset_path, self.args.test_data_name_list, 256, None, 'test')
-        val_data_loader = DataLoader(dataset, batch_size=self.args.batch_size, num_workers=4, drop_last=False)
+        val_data_loader = DataLoader(dataset, batch_size=16, num_workers=4, drop_last=False)
         torch.cuda.empty_cache()
         
         with torch.no_grad():
@@ -169,56 +176,7 @@ class Trainer(object):
         pre = self.evaluator.Pixel_Precision_Rate()
         iou = self.evaluator.Intersection_over_Union()
         kc = self.evaluator.Kappa_coefficient()
-        print(f'Recall rate is {rec}, Precision rate is {pre}, OA is {oa}, '
+        print(f'Racall rate is {rec}, Precision rate is {pre}, OA is {oa}, '
               f'F1 score is {f1_score}, IoU is {iou}, Kappa coefficient is {kc}')
         return rec, pre, oa, f1_score, iou, kc
 
-def main():
-    parser = argparse.ArgumentParser(description="Training on SYSU/LEVIR-CD+/WHU-CD dataset")
-    parser.add_argument('--cfg', type=str, default='/home/songjian/project/RemoteSensing/VMamba/classification/configs/vssm1/vssm_base_224.yaml')
-    parser.add_argument(
-        "--opts",
-        help="Modify config options by adding 'KEY VALUE' pairs. ",
-        default=None,
-        nargs='+',
-    )
-    parser.add_argument('--pretrained_weight_path', type=str)
-    parser.add_argument('--dataset', type=str, default='SYSU')
-    parser.add_argument('--type', type=str, default='train')
-    parser.add_argument('--train_dataset_path', type=str, default='/home/songjian/project/datasets/SYSU/train')
-    parser.add_argument('--train_data_list_path', type=str, default='/home/songjian/project/datasets/SYSU/train_list.txt')
-    parser.add_argument('--test_dataset_path', type=str, default='/home/songjian/project/datasets/SYSU/test')
-    parser.add_argument('--test_data_list_path', type=str, default='/home/songjian/project/datasets/SYSU/test_list.txt')
-    parser.add_argument('--shuffle', type=bool, default=True)
-    parser.add_argument('--batch_size', type=int, default=16)
-    parser.add_argument('--crop_size', type=int, default=256)
-    parser.add_argument('--train_data_name_list', type=list)
-    parser.add_argument('--test_data_name_list', type=list)
-    parser.add_argument('--start_iter', type=int, default=0)
-    parser.add_argument('--cuda', type=bool, default=True)
-    parser.add_argument('--max_iters', type=int, default=240000)
-    parser.add_argument('--model_type', type=str, default='MambaBCD')
-    parser.add_argument('--model_param_path', type=str, default='../saved_models')
-
-    parser.add_argument('--resume', type=str)
-    parser.add_argument('--learning_rate', type=float, default=1e-4)
-    parser.add_argument('--momentum', type=float, default=0.9)
-    parser.add_argument('--weight_decay', type=float, default=5e-4)
-
-    args = parser.parse_args()
-    with open(args.train_data_list_path, "r") as f:
-        # data_name_list = f.read()
-        data_name_list = [data_name.strip() for data_name in f]
-    args.train_data_name_list = data_name_list
-
-    with open(args.test_data_list_path, "r") as f:
-        # data_name_list = f.read()
-        test_data_name_list = [data_name.strip() for data_name in f]
-    args.test_data_name_list = test_data_name_list
-
-    trainer = Trainer(args)
-    trainer.training()
-
-
-if __name__ == "__main__":
-    main()
