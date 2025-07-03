@@ -20,6 +20,7 @@ import torch.utils.checkpoint as checkpoint
 from einops import rearrange, repeat
 from timm.models.layers import DropPath, trunc_normal_
 from fvcore.nn import FlopCountAnalysis, flop_count_str, flop_count, parameter_count
+from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion
 
 
 class STMambaBCD(nn.Module):
@@ -56,7 +57,7 @@ class STMambaBCD(nn.Module):
             **clean_kwargs
         )
 
-        self.main_clf = nn.Conv2d(in_channels=128, out_channels=2, kernel_size=1)
+        self.main_clf = PyramidFusion(self.encoder.dims[-4], 2)
 
     def _upsample_add(self, x, y):
         _, _, H, W = y.size()
@@ -68,7 +69,7 @@ class STMambaBCD(nn.Module):
         post_features = self.encoder(post_data)
 
         # Decoder processing - passing encoder outputs to the decoder
-        output = self.decoder(pre_features, post_features)
+        output,_ = self.decoder(pre_features, post_features)
 
         output = self.main_clf(output)
         output = F.interpolate(output, size=pre_data.size()[-2:], mode='bilinear')

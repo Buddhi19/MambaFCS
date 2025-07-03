@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor, einsum
 from torch.optim import lr_scheduler
+from torch.optim.lr_scheduler import CosineAnnealingLR
 from typing import Iterable, Set, Tuple
 import logging
 import os
@@ -98,3 +99,4 @@ def save_network(opt, epoch, cd_model, optimizer, is_best_model=False ):
     if is_best_model:
         logger.info(
             'Saved best CD model in [{:s}] ...'.format(best_cd_gen_path))
+
