@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from RemoteSensing.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
 from RemoteSensing.changedetection.models.ResBlockSe import ResBlock, SqueezeExcitation
-from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion, DepthwiseSeparableConv, CrossAttentionFusion
+from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion, DepthwiseSeparableConv, FFT_Fusion 
 
 class ChangeDecoder(nn.Module):
     def __init__(self, encoder_dims, channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs):
@@ -53,10 +53,10 @@ class ChangeDecoder(nn.Module):
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
 
-        self.fuse_layer_1 = CrossAttentionFusion(in_channels=encoder_dims[-1], use_diff=True, cross_attn_heads=4)
-        self.fuse_layer_2 = CrossAttentionFusion(in_channels=encoder_dims[-2], use_diff=True, cross_attn_heads=4)
-        self.fuse_layer_3 = CrossAttentionFusion(in_channels=encoder_dims[-3], use_diff=True, cross_attn_heads=4)
-        self.fuse_layer_4 = CrossAttentionFusion(in_channels=encoder_dims[-4], use_diff=True, cross_attn_heads=4)
+        self.fuse_layer_1 = FFT_Fusion(in_channels=encoder_dims[-1], use_diff=True, cross_attn_heads=4)
+        self.fuse_layer_2 = FFT_Fusion(in_channels=encoder_dims[-2], use_diff=True, cross_attn_heads=4)
+        self.fuse_layer_3 = FFT_Fusion(in_channels=encoder_dims[-3], use_diff=True, cross_attn_heads=4)
+        self.fuse_layer_4 = FFT_Fusion(in_channels=encoder_dims[-4], use_diff=True, cross_attn_heads=4)
 
 
         self.down_sample_1 = PyramidFusion(in_channels=encoder_dims[-1], out_channels=encoder_dims[-2])
