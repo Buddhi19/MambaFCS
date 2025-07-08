@@ -70,7 +70,7 @@ class Trainer(object):
 
         self.deep_model = self.deep_model.cuda()
 
-        self.model_save_path = os.path.join(args.model_param_path, f'CA_spatial_fft_19_wo_CGA{args.dataset}')
+        self.model_save_path = os.path.join(args.model_param_path, f'{args.model_saving_name}')
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
 
@@ -99,7 +99,7 @@ class Trainer(object):
             self.optim.load_state_dict(torch.load(args.optim_path))
             self.scheduler.load_state_dict(torch.load(args.scheduler_path))
 
-        self.log_dir = os.path.join(main_dir,'saved_models', f'CA_spatial_fft_19_wo_CGA{args.dataset}')
+        self.log_dir = os.path.join(main_dir,'saved_models', f'{args.model_saving_name}')
         if not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
 
@@ -111,11 +111,7 @@ class Trainer(object):
         torch.cuda.empty_cache()
         elem_num = len(self.train_data_loader)
         train_enumerator = enumerate(self.train_data_loader)
-        # sek_criterion = SeK_Loss(
-        #     num_classes=self.args.num_classes,  # SECOND dataset classes (exclude non-change)
-        #     non_change_class=0,
-        #     beta=1.5
-        # ).cuda()
+
         for _ in tqdm(range(elem_num)):
             itera, data = train_enumerator.__next__()
             pre_change_imgs, post_change_imgs, label_cd, label_clf_t1, label_clf_t2, _ = data
@@ -136,13 +132,6 @@ class Trainer(object):
             pre_change_imgs = pre_change_imgs.float()
             post_change_imgs = post_change_imgs.float()
 
-            # sek_loss_value = sek_criterion(
-            #     output_semantic_t1, 
-            #     output_semantic_t2,
-            #     label_clf_t1,
-            #     label_clf_t2,
-            #     change_mask
-            # )
 
             # ================== Auxiliary Losses ==================
             # 1. Semantic segmentation losses
