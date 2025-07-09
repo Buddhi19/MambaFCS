@@ -163,25 +163,16 @@ class Trainer(object):
 
             # ================== Loss Weighting ==================
             weights = {
-                'sek': 0,
-                'bcd': 0,
-                'ce': 1,
-                'lovasz': 1,
-                'similarity': 0.05
-            }
-            weights_second = {
                 'sek': 0.3,
                 'bcd': 1,
                 'ce': 0.5,
                 'lovasz': 0.5,
                 'similarity': 0.05
             }
-            if self.args.dataset == 'SECOND':
-                weights = weights_second
             
-            SEK_START_ITER = 15000 if self.args.dataset == 'SECOND' else 250000
+            SEK_INCREMENT_ITER = 15000 if self.args.dataset == 'SECOND' else 35000
 
-            if itera + self.args.start_iter > SEK_START_ITER:
+            if itera + self.args.start_iter > SEK_INCREMENT_ITER:
                 weights['sek'] = 1
                 weights['bcd'] = 1
                 weights['ce'] = 0.5
