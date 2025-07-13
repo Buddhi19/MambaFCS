@@ -214,7 +214,7 @@ class FFTBranch(nn.Module):
 # ────────────────────────────────────────────────────────────────
 # Upgraded CrossAttentionFusion with Dual‑Frequency branch
 # ────────────────────────────────────────────────────────────────
-class CrossAttentionFusion(nn.Module):
+class FFT_Fusion(nn.Module):
     """
     • Spatial concat + optional |diff|
     •   + frequency‑domain (FFT) features for both images
