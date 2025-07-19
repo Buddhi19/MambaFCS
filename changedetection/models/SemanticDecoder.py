@@ -6,6 +6,9 @@ from RemoteSensing.changedetection.models.ResBlockSe import ResBlock, SqueezeExc
 from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion, PyramidFusion, PyramidFusion, FFTBranch
 from RemoteSensing.changedetection.models.MultiScaleChangeGuidedAttention import ChangeGuidedAttention
 
+import os
+main_dir = os.path.dirname(os.path.dirname(os.path.dirname((os.path.dirname(__file__)))))
+
 class SemanticDecoder(nn.Module):
     def __init__(self, encoder_dims, channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs):
         super(SemanticDecoder, self).__init__()
@@ -67,12 +70,15 @@ class SemanticDecoder(nn.Module):
         feat_1, feat_2, feat_3, feat_4 = features
         change_map_1, change_map_2, change_map_3, change_map_4 = change_maps
 
+        for_figs = []
+
         '''
             Stage I
         '''
         p4 = feat_4
         if self.CHANGE_GUIDED_ATTENTION:
             p4 = ChangeGuidedAttention()(feat_4, change_map_4)
+            for_figs.append(p4)
 
         p4 = self.st_block_4_semantic(p4)
 
@@ -83,6 +89,7 @@ class SemanticDecoder(nn.Module):
         p3 = feat_3
         if self.CHANGE_GUIDED_ATTENTION:
             p3 = ChangeGuidedAttention()(feat_3, change_map_3)
+            for_figs.append(p3)
         
         p3 = self._upsample_add(p4, p3)
         p3 = self.smooth_layer_3_semantic(p3)
@@ -95,6 +102,7 @@ class SemanticDecoder(nn.Module):
         p2 = feat_2
         if self.CHANGE_GUIDED_ATTENTION:
             p2 = ChangeGuidedAttention()(feat_2, change_map_2)
+            for_figs.append(p2)
 
         p2 = self._upsample_add(p3, p2)
         p2 = self.smooth_layer_2_semantic(p2)
@@ -108,9 +116,11 @@ class SemanticDecoder(nn.Module):
         p1 = feat_1
         if self.CHANGE_GUIDED_ATTENTION:
             p1 = ChangeGuidedAttention()(feat_1, change_map_1)
+            for_figs.append(p1)
 
         p1 = self._upsample_add(p2, p1)
         p1 = self.smooth_layer_1_semantic(p1)
         p1 = self.st_block_1_semantic(p1)
-        p1 = self.smooth_layer_0_semantic(p1)
+        p1 = self.smooth_layer_0_semantic(p1) 
+
         return p1 
