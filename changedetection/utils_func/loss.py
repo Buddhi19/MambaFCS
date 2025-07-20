@@ -119,7 +119,7 @@ def ce2_dice1(input, target, ignore_index=255):
     logits_positive = input[:, 1, :, :]  # Shape: [N, H, W]
 
     bce_loss = weighted_BCE_logits(logits_positive, labels_bn)
-    loss = 1 * ce_loss + 0.35 * bce_loss + 0.15* dice_loss_ 
+    loss = 1 * ce_loss + 0.35 * bce_loss + 0.35* dice_loss_ 
     return loss
 
 def ce2_dice1_multiclass(input, target, weight=None):

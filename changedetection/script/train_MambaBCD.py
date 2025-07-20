@@ -67,7 +67,7 @@ class Trainer(object):
             ) 
         self.deep_model = self.deep_model.cuda()
         
-        self.model_save_path = os.path.join(args.model_param_path, "LEVIR_fft_small")
+        self.model_save_path = os.path.join(args.model_param_path, f"{args.model_saving_name}")
 
         self.lr = args.learning_rate
         self.epoch = args.max_iters // args.batch_size
@@ -91,7 +91,7 @@ class Trainer(object):
                                  lr=args.learning_rate,
                                  weight_decay=args.weight_decay)
 
-        self.log_dir = os.path.join(main_dir,'saved_models', 'LEVIR_fft_small')
+        self.log_dir = os.path.join(main_dir,'saved_models', f'{args.model_saving_name}')
         if not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
 

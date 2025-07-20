@@ -53,10 +53,10 @@ class ChangeDecoder(nn.Module):
             Permute(0, 3, 1, 2) if not channel_first else nn.Identity(),
         )
 
-        self.fuse_layer_1 = FFT_Fusion(in_channels=encoder_dims[-1], use_diff=True, cross_attn_heads=4)
-        self.fuse_layer_2 = FFT_Fusion(in_channels=encoder_dims[-2], use_diff=True, cross_attn_heads=4)
-        self.fuse_layer_3 = FFT_Fusion(in_channels=encoder_dims[-3], use_diff=True, cross_attn_heads=4)
-        self.fuse_layer_4 = FFT_Fusion(in_channels=encoder_dims[-4], use_diff=True, cross_attn_heads=4)
+        self.fuse_layer_1 = FFT_Fusion(in_channels=encoder_dims[-1], use_diff=True)
+        self.fuse_layer_2 = FFT_Fusion(in_channels=encoder_dims[-2], use_diff=True)
+        self.fuse_layer_3 = FFT_Fusion(in_channels=encoder_dims[-3], use_diff=True)
+        self.fuse_layer_4 = FFT_Fusion(in_channels=encoder_dims[-4], use_diff=True)
 
 
         self.down_sample_1 = PyramidFusion(in_channels=encoder_dims[-1], out_channels=encoder_dims[-2])
