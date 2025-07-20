@@ -240,6 +240,9 @@ class FFT_Fusion(nn.Module):
         self.ch_gate = ChannelGate(in_channels)
         self.sp_gate = SpatialGate()
 
+        self.cross_attn = CrossAttention(dim=in_channels,
+                                         num_heads=cross_attn_heads)
+
     def forward(self, pre_feat, post_feat):
         cat = torch.cat([pre_feat, post_feat], dim=1)
 
