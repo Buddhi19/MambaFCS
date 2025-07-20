@@ -215,24 +215,22 @@ class FFTBranch(nn.Module):
 # Upgraded CrossAttentionFusion with Dual‑Frequency branch
 # ────────────────────────────────────────────────────────────────
 class FFT_Fusion(nn.Module):
-    """
-    • Spatial concat + optional |diff|
-    •   + frequency‑domain (FFT) features for both images
-    • Bidirectional cross‑attention
-    • Channel & spatial gating
-    """
     def __init__(self, in_channels, use_diff=True,
                  cross_attn_heads=4, freq_ratio=1):
         super().__init__()
-        self.use_diff = use_diff
+        self.use_diff = use_diff 
         c_freq = int(in_channels * freq_ratio)
 
+        self.FFT_BRANCH = True
         # FFT branches
-        self.fft_pre  = FFTBranch(in_channels, c_freq)
-        self.fft_post = FFTBranch(in_channels, c_freq)
+        fusion_in = 2* in_channels   
+        
+        if self.FFT_BRANCH:            # pre+post spatial
+            self.fft_pre  = FFTBranch(in_channels, c_freq)
+            self.fft_post = FFTBranch(in_channels, c_freq)
 
-        fusion_in = 2 * (in_channels + c_freq)               # pre+post spatial+freq
-        if use_diff:
+            fusion_in = 2 * (in_channels + c_freq)               # pre+post spatial+freq
+        if self.use_diff:
             fusion_in += in_channels                         # |pre‑post|
 
         self.reduce_conv = nn.Conv2d(fusion_in, in_channels, 1, bias=False)
@@ -242,40 +240,21 @@ class FFT_Fusion(nn.Module):
         self.ch_gate = ChannelGate(in_channels)
         self.sp_gate = SpatialGate()
 
-        self.cross_attn = CrossAttention(dim=in_channels,
-                                         num_heads=cross_attn_heads)
-
     def forward(self, pre_feat, post_feat):
-        """
-        Args
-        ----
-        pre_feat, post_feat : [B, C, H, W]
-        """
-        pre_freq  = self.fft_pre(pre_feat)
-        post_freq = self.fft_post(post_feat)
+        cat = torch.cat([pre_feat, post_feat], dim=1)
 
-        cat = torch.cat([pre_feat, pre_freq,
-                         post_feat, post_freq], dim=1)
+        if self.FFT_BRANCH:
+            pre_freq  = self.fft_pre(pre_feat)
+            post_freq = self.fft_post(post_feat)
+
+            cat = torch.cat([pre_feat, pre_freq,
+                            post_feat, post_freq], dim=1)
 
         if self.use_diff:
             cat = torch.cat([cat, torch.abs(pre_feat - post_feat)], dim=1)
 
         fused = self.reduce_relu(self.reduce_bn(self.reduce_conv(cat)))  # [B,C,H,W]
 
-        # # ─── Bidirectional cross attention ────────────────────────
-        # B, C, H, W = fused.shape
-        # pre_flat  = rearrange(pre_feat,  'b c h w -> b (h w) c')
-        # post_flat = rearrange(post_feat, 'b c h w -> b (h w) c')
-
-        # fwd = self.cross_attn(pre_flat,  post_flat)
-        # bwd = self.cross_attn(post_flat, pre_flat)
-
-        # fwd = rearrange(fwd, 'b (h w) c -> b c h w', h=H, w=W)
-        # bwd = rearrange(bwd, 'b (h w) c -> b c h w', h=H, w=W)
-
-        fused = fused #+ fwd + bwd
-
-        # ─── Gating ───────────────────────────────────────────────
         fused = self.ch_gate(fused)
         fused = self.sp_gate(fused)
         return fused

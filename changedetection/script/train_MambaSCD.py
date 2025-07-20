@@ -138,6 +138,11 @@ class Trainer(object):
             ce_loss_cd = F.cross_entropy(output_1, label_cd, ignore_index=255)
             ce_loss_clf_t1 = F.cross_entropy(output_semantic_t1, label_clf_t1, ignore_index=255)
             ce_loss_clf_t2 = F.cross_entropy(output_semantic_t2, label_clf_t2, ignore_index=255)
+
+            # ce_loss_cd = ce2_dice1(output_1, label_cd)
+            # ce_loss_clf_t1 = ce2_dice1_multiclass(output_semantic_t1, label_clf_t1)
+            # ce_loss_clf_t2 = ce2_dice1_multiclass(output_semantic_t2, label_clf_t2)
+
             
             # 2. Boundary refinement
             lovasz_loss_cd = L.lovasz_softmax(F.softmax(output_1, dim=1), label_cd, ignore=255)
