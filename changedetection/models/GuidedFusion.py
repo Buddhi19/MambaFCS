@@ -218,10 +218,10 @@ class FFT_Fusion(nn.Module):
     def __init__(self, in_channels, use_diff=True,
                  cross_attn_heads=4, freq_ratio=1):
         super().__init__()
-        self.use_diff = False
+        self.use_diff = use_diff 
         c_freq = int(in_channels * freq_ratio)
 
-        self.FFT_BRANCH = False
+        self.FFT_BRANCH = True
         # FFT branches
         fusion_in = 2* in_channels   
         
