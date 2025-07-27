@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from RemoteSensing.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
-from RemoteSensing.changedetection.models.ResBlockSe import ResBlock, SqueezeExcitation
-from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion, DepthwiseSeparableConv, FFT_Fusion 
+from MambaFCS.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
+from MambaFCS.changedetection.models.ResBlockSe import ResBlock, SqueezeExcitation
+from MambaFCS.changedetection.models.GuidedFusion import PyramidFusion, DepthwiseSeparableConv, FFT_Fusion 
 
 class ChangeDecoder(nn.Module):
     def __init__(self, encoder_dims, channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs):

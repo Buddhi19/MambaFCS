@@ -9,19 +9,19 @@ import time
 
 import numpy as np
 
-from RemoteSensing.changedetection.configs.config import get_config
+from MambaFCS.changedetection.configs.config import get_config
 
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from RemoteSensing.changedetection.datasets.make_data_loader import ChangeDetectionDatset, make_data_loader
-from RemoteSensing.changedetection.utils_func.metrics import Evaluator
-from RemoteSensing.changedetection.models.MambaBCD import STMambaBCD
-from RemoteSensing.changedetection.utils_func.loss import ce2_dice1
+from MambaFCS.changedetection.datasets.make_data_loader import ChangeDetectionDatset, make_data_loader
+from MambaFCS.changedetection.utils_func.metrics import Evaluator
+from MambaFCS.changedetection.models.MambaBCD import STMambaBCD
+from MambaFCS.changedetection.utils_func.loss import ce2_dice1
 
-import RemoteSensing.changedetection.utils_func.lovasz_loss as L
+import MambaFCS.changedetection.utils_func.lovasz_loss as L
 
 from torch.utils.tensorboard import SummaryWriter
 
