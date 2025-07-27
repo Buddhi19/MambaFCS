@@ -8,17 +8,17 @@ import time
 
 import numpy as np
 
-from RemoteSensing.changedetection.configs.config import get_config
+from MambaFCS.changedetection.configs.config import get_config
 
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from RemoteSensing.changedetection.datasets.make_data_loader import SemanticChangeDetectionDatset, make_data_loader
-from RemoteSensing.changedetection.utils_func.metrics import Evaluator
-from RemoteSensing.changedetection.models.STMambaSCD import STMambaSCD
+from MambaFCS.changedetection.datasets.make_data_loader import SemanticChangeDetectionDatset, make_data_loader
+from MambaFCS.changedetection.utils_func.metrics import Evaluator
+from MambaFCS.changedetection.models.STMambaSCD import STMambaSCD
 
-import RemoteSensing.changedetection.utils_func.lovasz_loss as L
-from RemoteSensing.changedetection.utils_func.mcd_utils import accuracy, SCDD_eval_all, AverageMeter
+import MambaFCS.changedetection.utils_func.lovasz_loss as L
+from MambaFCS.changedetection.utils_func.mcd_utils import accuracy, SCDD_eval_all, AverageMeter
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 from tqdm import tqdm

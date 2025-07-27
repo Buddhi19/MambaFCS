@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from RemoteSensing.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
-from RemoteSensing.changedetection.models.ResBlockSe import ResBlock, SqueezeExcitation
-from RemoteSensing.changedetection.models.GuidedFusion import PyramidFusion, PyramidFusion, PyramidFusion, FFTBranch
-from RemoteSensing.changedetection.models.MultiScaleChangeGuidedAttention import ChangeGuidedAttention
+from MambaFCS.classification.models.vmamba import VSSM, LayerNorm2d, VSSBlock, Permute
+from MambaFCS.changedetection.models.ResBlockSe import ResBlock, SqueezeExcitation
+from MambaFCS.changedetection.models.GuidedFusion import PyramidFusion, PyramidFusion, PyramidFusion, FFTBranch
+from MambaFCS.changedetection.models.MultiScaleChangeGuidedAttention import ChangeGuidedAttention
 
 import os
 main_dir = os.path.dirname(os.path.dirname(os.path.dirname((os.path.dirname(__file__)))))

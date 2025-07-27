@@ -9,21 +9,21 @@ import time
 
 import numpy as np
 
-from RemoteSensing.changedetection.configs.config import get_config
+from MambaFCS.changedetection.configs.config import get_config
 
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from RemoteSensing.changedetection.datasets.make_data_loader import SemanticChangeDetectionDatset, make_data_loader, SemanticChangeDetectionDatset_LandSat
-from RemoteSensing.changedetection.utils_func.metrics import Evaluator
-from RemoteSensing.changedetection.models.STMambaSCD import STMambaSCD
-import RemoteSensing.changedetection.utils_func.lovasz_loss as L
+from MambaFCS.changedetection.datasets.make_data_loader import SemanticChangeDetectionDatset, make_data_loader, SemanticChangeDetectionDatset_LandSat
+from MambaFCS.changedetection.utils_func.metrics import Evaluator
+from MambaFCS.changedetection.models.STMambaSCD import STMambaSCD
+import MambaFCS.changedetection.utils_func.lovasz_loss as L
 from torch.optim.lr_scheduler import StepLR
-from RemoteSensing.changedetection.utils_func.mcd_utils import accuracy, SCDD_eval_all, AverageMeter
+from MambaFCS.changedetection.utils_func.mcd_utils import accuracy, SCDD_eval_all, AverageMeter
 
-from RemoteSensing.changedetection.utils_func.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass, SeK_Loss, SEK_loss_from_eval
+from MambaFCS.changedetection.utils_func.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass, SeK_Loss, SEK_loss_from_eval
 
 from torch.utils.tensorboard import SummaryWriter
 
