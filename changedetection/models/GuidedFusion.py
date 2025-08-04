@@ -194,9 +194,7 @@ class SpatialGate(nn.Module):
         return x * self.sigmoid(gate)
 
 
-# ────────────────────────────────────────────────────────────────
-# FFT helper: converts spatial map → log‑magnitude frequency map
-# ────────────────────────────────────────────────────────────────
+
 class FFTBranch(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
@@ -211,9 +209,6 @@ class FFTBranch(nn.Module):
         return self.proj(amp.real)                           # preserve H×W
 
 
-# ────────────────────────────────────────────────────────────────
-# Upgraded CrossAttentionFusion with Dual‑Frequency branch
-# ────────────────────────────────────────────────────────────────
 class FFT_Fusion(nn.Module):
     def __init__(self, in_channels, use_diff=True,
                  cross_attn_heads=4, freq_ratio=1):
