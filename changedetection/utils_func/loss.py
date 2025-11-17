@@ -229,6 +229,6 @@ def SEK_loss_from_eval(pred_t1, pred_t2, label_t1, label_t2, change_mask, num_cl
     average_sek = torch.tensor(average_sek, dtype=torch.float32).cuda()
     average_IoU = torch.tensor(average_IoU, dtype=torch.float32).cuda()
 
-    sek_loss = -torch.log((average_sek+1)/2 + 1e-6) - 0.5 * torch.log(average_IoU + 1e-6)
+    sek_loss = -torch.log(average_sek + 1e-6) - 0.5 * torch.log(average_IoU + 1e-6)
 
     return torch.clamp(sek_loss, min=0.0)

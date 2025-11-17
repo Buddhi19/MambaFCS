@@ -13,7 +13,7 @@ class SemanticDecoder(nn.Module):
     def __init__(self, encoder_dims, channel_first, norm_layer, ssm_act_layer, mlp_act_layer, **kwargs):
         super(SemanticDecoder, self).__init__()
 
-        self.CHANGE_GUIDED_ATTENTION = True
+        self.CHANGE_GUIDED_ATTENTION = False
         # Define the VSS Block for Spatio-temporal relationship modelling
         self.st_block_4_semantic = nn.Sequential(
             Permute(0, 2, 3, 1) if not channel_first else nn.Identity(),
