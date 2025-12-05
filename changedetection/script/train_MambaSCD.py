@@ -23,7 +23,7 @@ import MambaFCS.changedetection.utils_func.lovasz_loss as L
 from torch.optim.lr_scheduler import StepLR
 from MambaFCS.changedetection.utils_func.mcd_utils import accuracy, SCDD_eval_all, AverageMeter
 
-from MambaFCS.changedetection.utils_func.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass, SeK_Loss, SEK_loss_from_eval
+from MambaFCS.changedetection.utils_func.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass, SEK_loss_from_eval
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -168,21 +168,21 @@ class Trainer(object):
 
             # ================== Loss Weighting ==================
             weights = {
-                'sek': 0.3,
+                'sek': 0.3, #0.3
                 'bcd': 1,
                 'ce': 0.5,
                 'lovasz': 0.5,
                 'similarity': 0.05
             }
             
-            # SEK_INCREMENT_ITER = 15000 if self.args.dataset == 'SECOND' else 35000
+            SEK_INCREMENT_ITER = 7500 if self.args.dataset == 'SECOND' else 35000
 
-            # if itera + self.args.start_iter > SEK_INCREMENT_ITER:
-            #     weights['sek'] = 1
-            #     weights['bcd'] = 1
-            #     weights['ce'] = 0.5
-            #     weights['lovasz'] = 0.5
-            #     weights['similarity'] = 0.05
+            if itera + self.args.start_iter > SEK_INCREMENT_ITER:
+                weights['sek'] = 1
+                weights['bcd'] = 1
+                weights['ce'] = 0.5
+                weights['lovasz'] = 0.5
+                weights['similarity'] = 0.05
 
             total_loss = (
                 weights['sek'] * sek_loss_value +
