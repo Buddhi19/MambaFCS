@@ -19,6 +19,12 @@ Joint Spatio-Frequency Fusion • Change-Guided Attention • SeK Loss<br>
 <a href="#">
   <img src="https://img.shields.io/badge/Weights-coming%20soon-7B2CBF.svg" alt="Weights">
 </a>
+<a href="LICENSE">
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
+</a>
+<a href="#">
+  <img src="https://visitorbadge.io/api/visitors?path=Buddhi19%2FMambaFCS&label=visitors&countColor=%23263759" alt="visitors">
+</a>
 </p>
 
 <p>
