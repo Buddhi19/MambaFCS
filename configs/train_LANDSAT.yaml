@@ -1,0 +1,48 @@
+# Train Semantic Change Detection on LandSat.
+# Update `dataset_root` to your local Landsat-SCD path if needed.
+
+# ---- VMamba / VSSM backbone config ----
+cfg: MambaFCS/changedetection/configs/vssm1/vssm_base_224.yaml
+opts: null
+pretrained_weight_path: VMamba/vssm_base_0229_ckpt_epoch_237.pth
+
+# ---- Dataset ----
+dataset: LandSat
+type: train
+
+# Dataset root must contain: A/, B/, labelA/, labelB/
+dataset_root: /data/inr/llm/Datasets/Landsat-SCD
+train_dataset_path: /data/inr/llm/Datasets/Landsat-SCD
+test_dataset_path: /data/inr/llm/Datasets/Landsat-SCD
+
+# List files are resolved relative to `dataset_root` when not absolute.
+# LandSat training used both train + val lists.
+train_data_list_paths:
+  - train_list.txt
+  - val_list.txt
+test_data_list_path: test_list.txt
+
+# ---- Training ----
+shuffle: true
+batch_size: 10
+crop_size: 416
+start_iter: 0
+max_iters: 1600000
+learning_rate: 1.0e-4
+weight_decay: 5.0e-4
+num_classes: 5
+
+# ---- Checkpointing (optional) ----
+resume: null
+optim_path: null
+scheduler_path: null
+
+# ---- Outputs ----
+model_type: MambaSCD_base
+model_param_path: MambaFCS_saved_models/Landsat_SCD
+model_saving_name: LandSat_full
+
+# ---- Runtime ----
+cuda: true
+cuda_device: 6
+do_validation: true

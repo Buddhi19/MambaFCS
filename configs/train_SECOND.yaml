@@ -1,0 +1,46 @@
+# Train Semantic Change Detection on SECOND.
+# Update `dataset_root` to your local SECOND path if needed.
+
+# ---- VMamba / VSSM backbone config ----
+cfg: MambaFCS/changedetection/configs/vssm1/vssm_base_224.yaml
+opts: null
+pretrained_weight_path: VMamba/vssm_base_0229_ckpt_epoch_237.pth
+
+# ---- Dataset ----
+dataset: SECOND
+type: train
+
+# Dataset root should contain: train/ and test/ subfolders.
+dataset_root: /data/inr/llm/Datasets/SECOND
+train_dataset_path: /data/inr/llm/Datasets/SECOND/train
+test_dataset_path: /data/inr/llm/Datasets/SECOND/test
+
+# List files are resolved relative to `dataset_root` when not absolute.
+train_data_list_paths:
+  - train.txt
+test_data_list_path: test.txt
+
+# ---- Training ----
+shuffle: true
+batch_size: 8
+crop_size: 512
+start_iter: 0
+max_iters: 800000
+learning_rate: 1.0e-4
+weight_decay: 5.0e-4
+num_classes: 7
+
+# ---- Checkpointing (optional) ----
+resume: null
+optim_path: null
+scheduler_path: null
+
+# ---- Outputs ----
+model_type: MambaSCD_base
+model_param_path: MambaFCS_saved_models/JOURNAL
+model_saving_name: SECOND_FULL
+
+# ---- Runtime ----
+cuda: true
+cuda_device: 7
+do_validation: false
