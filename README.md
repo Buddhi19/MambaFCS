@@ -2,28 +2,22 @@
 
 <h1>🚀 Mamba-FCS</h1>
 
-<h2>Mamba-Powered Semantic Change Detection<br>That Cuts Through Real-World Remote Sensing Chaos</h2>
+<h2>Joint Spatio-Frequency Feature Fusion with Change-Guided Attention and SeK Loss</h2>
 
-<h3>
-Joint Spatio-Frequency Fusion • Change-Guided Attention • SeK Loss<br>
-→ State-of-the-Art on SECOND & Landsat-SCD with Efficient Long-Range Modeling
-</h3>
+<h2>🏆 Current Best-Performing Algorithm for Semantic Change Detection 🏆</h2>
 
 <p>
+  <a href="https://ieeexplore.ieee.org/document/11391528">
+  <img src="https://img.shields.io/badge/IEEE%20JSTARS-Official%20Publication-00629B.svg" alt="IEEE JSTARS Paper">
+</a>
 <a href="https://arxiv.org/abs/2508.08232">
   <img src="https://img.shields.io/badge/arXiv-2508.08232-b31b1b.svg" alt="arXiv">
-</a>
-<a href="#">
-  <img src="https://img.shields.io/badge/IEEE%20JSTARS-paper%20coming%20soon-00629B.svg" alt="IEEE JSTARS">
 </a>
 <a href="#">
   <img src="https://img.shields.io/badge/Weights-coming%20soon-7B2CBF.svg" alt="Weights">
 </a>
 <a href="LICENSE">
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
-</a>
-<a href="#">
-  <img src="https://visitorbadge.io/api/visitors?path=Buddhi19%2FMambaFCS&label=visitors&countColor=%23263759" alt="visitors">
 </a>
 </p>
 
@@ -46,11 +40,12 @@ Visual State Space backbone fused with frequency-aware features, bidirectional c
 
 ---
 
-## 🔥 Updates
+## 🔥🔥 Updates
+- **Paper Published** — IEEE JSTARS (Official DOI: https://doi.org/10.1109/JSTARS.2026.3663066)
+- **Accepted** — IEEE JSTARS (Camera-ready version submitted)
+- **Code Release** — Full training pipeline with structured YAML configurations now available
+- **Aug 2025** — Preprint available on arXiv: https://arxiv.org/abs/2508.08232
 
-- **Aug 2025** — Preprint live on arXiv: [2508.08232](https://arxiv.org/abs/2508.08232)  
-- **Accepted** — IEEE JSTARS (camera-ready coming soon)  
-- **Code Drop** — Full training pipeline + clean YAML configs now public  
 
 Ready to push the boundaries of change detection? Let's go.
 
@@ -198,14 +193,16 @@ Visuals speak louder: expect dramatically cleaner boundaries and far better rare
 If Mamba-FCS fuels your research, please cite:
 
 ```bibtex
-@misc{wijenayake2025mambafcs,
-      title={Mamba-FCS: Joint Spatio- Frequency Feature Fusion, Change-Guided Attention, and SeK Loss for Enhanced Semantic Change Detection in Remote Sensing}, 
-      author={Buddhi Wijenayake and Athulya Ratnayake and Praveen Sumanasekara and Roshan Godaliyadda and Parakrama Ekanayake and Vijitha Herath and Nichula Wasalathilaka},
-      year={2025},
-      eprint={2508.08232},
-      archivePrefix={arXiv},
-      primaryClass={eess.IV},
-      url={https://arxiv.org/abs/2508.08232}, 
+@ARTICLE{mambafcs,
+  author={Wijenayake, Buddhi and Ratnayake, Athulya and Sumanasekara, Praveen and Godaliyadda, Roshan and Ekanayake, Parakrama and Herath, Vijitha and Wasalathilaka, Nichula},
+  journal={IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing}, 
+  title={Mamba-FCS: Joint Spatio-Frequency Feature Fusion, Change-Guided Attention, and Sek Inspired Loss for Enhanced Semantic Change Detection in Remote Sensing}, 
+  year={2026},
+  volume={},
+  number={},
+  pages={1-19},
+  keywords={Remote sensing imagery;semantic change detection;separated kappa;spatial–frequency fusion;state-space models},
+  doi={10.1109/JSTARS.2026.3663066}
 }
 ```
 
