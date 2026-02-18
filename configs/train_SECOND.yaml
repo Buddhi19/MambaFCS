@@ -37,7 +37,7 @@ scheduler_path: null
 
 # ---- Outputs ----
 model_type: MambaSCD_base
-model_param_path: MambaFCS_saved_models/JOURNAL
+model_param_path: MambaFCS_saved_models/JOURNAL1
 model_saving_name: SECOND_FULL
 
 # ---- Runtime ----
