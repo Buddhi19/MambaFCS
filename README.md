@@ -8,31 +8,33 @@
 
 <p>
   <a href="https://ieeexplore.ieee.org/document/11391528">
-  <img src="https://img.shields.io/badge/IEEE%20JSTARS-Official%20Publication-00629B.svg" alt="IEEE JSTARS Paper">
-</a>
-<a href="https://arxiv.org/abs/2508.08232">
-  <img src="https://img.shields.io/badge/arXiv-2508.08232-b31b1b.svg" alt="arXiv">
-</a>
-<a href="#">
-  <img src="https://img.shields.io/badge/Weights-coming%20soon-7B2CBF.svg" alt="Weights">
-</a>
-<a href="LICENSE">
-  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
-</a>
+    <img src="https://img.shields.io/badge/IEEE%20JSTARS-Official%20Publication-00629B.svg" alt="IEEE JSTARS Paper">
+  </a>
+  <a href="https://arxiv.org/abs/2508.08232">
+    <img src="https://img.shields.io/badge/arXiv-2508.08232-b31b1b.svg" alt="arXiv">
+  </a>
+  <a href="#">
+    <img src="https://img.shields.io/badge/Weights-coming%20soon-7B2CBF.svg" alt="Weights">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
+  </a>
 </p>
 
 <p>
-Visual State Space backbone fused with frequency-aware features, bidirectional change guidance, and class-imbalance-aware loss—delivering robust, precise semantic change detection in the toughest remote sensing scenarios.
+Visual State Space backbone fused with explicit spatio–frequency cues, bidirectional change guidance, and class-imbalance-aware loss—delivering robust, precise semantic change detection under tough illumination/seasonal shifts and severe long-tail labels.
 </p>
 
 <p>
 <a href="#updates">🔥 Updates</a> •
 <a href="#overview">🔭 Overview</a> •
+<a href="#why-spatiofrequency-matters">✨ Why Spatio–Frequency?</a> •
 <a href="#method">🧠 Method</a> •
 <a href="#quickstart">⚡ Quick Start</a> •
 <a href="#data">🗂 Data</a> •
-<a href="#train">🚀 Train & Eval</a> •
+<a href="#train--evaluation">🚀 Train & Eval</a> •
 <a href="#results">📊 Results</a> •
+<a href="#acknowledgements">🙏 Acknowledgements</a> •
 <a href="#citation">📜 Cite</a>
 </p>
 
@@ -40,12 +42,11 @@ Visual State Space backbone fused with frequency-aware features, bidirectional c
 
 ---
 
-## 🔥🔥 Updates
+## 🔥 Updates
 - **Paper Published** — IEEE JSTARS (Official DOI: https://doi.org/10.1109/JSTARS.2026.3663066)
 - **Accepted** — IEEE JSTARS (Camera-ready version submitted)
 - **Code Release** — Full training pipeline with structured YAML configurations now available
 - **Aug 2025** — Preprint available on arXiv: https://arxiv.org/abs/2508.08232
-
 
 Ready to push the boundaries of change detection? Let's go.
 
@@ -58,9 +59,9 @@ Semantic Change Detection in remote sensing is tough: seasonal shifts, lighting 
 Mamba-FCS changes the game:
 
 - **VMamba backbone** → linear-time long-range modeling (no more transformer VRAM nightmares)  
-- **JSF fusion** → FFT-powered frequency cues for illumination robustness and razor-sharp edges  
+- **JSF spatio–frequency fusion** → injects FFT log-amplitude cues into spatial features for appearance invariance + sharper boundaries  
 - **CGA module** → change probabilities actively guide semantic refinement (and vice versa)  
-- **SeK Loss** → finally treats rare classes with the respect they deserve
+- **SeK Loss** → finally treats rare classes with the respect they deserve  
 
 Outcome: cleaner maps, stronger rare-class recall, and real-world resilience.
 
@@ -71,15 +72,29 @@ Outcome: cleaner maps, stronger rare-class recall, and real-world resilience.
 
 ---
 
+## ✨ Why Spatio–Frequency Matters
+
+Remote sensing change detection suffers from **appearance shifts** (illumination, seasonal phenology, atmospheric effects).  
+Purely spatial feature fusion can overfit to texture/color changes, while **frequency-domain cues** capture structure and boundaries more consistently.
+
+**Mamba-FCS explicitly combines:**
+- **Spatial modeling (VMamba / state-space)** for long-range context
+- **Frequency cues (FFT log-amplitude)** for appearance robustness
+- **Change-guided cross-task attention** to tighten BCD ↔ SCD synergy
+
+This spatio–frequency + change-guided design is a key reason for strong rare-class performance and cleaner semantic boundaries.
+
+---
+
 ## 🧠 Method in ~30 Seconds
 
 Feed in bi-temporal images **T1** and **T2**:
 
 1. VMamba encoder extracts rich multi-scale features from both timestamps  
-2. JSF block injects log-amplitude frequency information → appearance-invariant features  
+2. JSF injects **frequency-domain log-amplitude (FFT)** into spatial features → stronger invariance to illumination/seasonal shifts  
 3. CGA leverages change cues to tighten BCD ↔ SCD synergy  
 4. Lightweight decoder predicts the final semantic change map  
-5. SeK Loss drives balanced optimization, even when changed pixels are scarce
+5. SeK Loss drives balanced optimization, even when changed pixels are scarce  
 
 Simple. Smart. Superior.
 
@@ -109,7 +124,7 @@ conda activate mambafcs
 pip install --upgrade pip
 pip install -r requirements.txt
 pip install pyyaml
-```
+````
 
 ### 3. Build Selective Scan Kernel (Critical Step)
 
@@ -179,12 +194,24 @@ Resume runs? Just flip `resume: true` and point to optimizer/scheduler states.
 
 Straight from the paper — reproducible out of the box:
 
-| Method        | Dataset       | OA (%) | F<sub>SCD</sub> (%) | mIoU (%) | SeK (%) |
-|---------------|---------------|-------:|---------------------|---------:|--------:|
-| **Mamba-FCS** | SECOND        | **88.62** | **65.78**        | **74.07** | **25.50** |
-| **Mamba-FCS** | Landsat-SCD   | **96.25** | **89.27**        | **88.81** | **60.26** |
+| Method        | Dataset     |    OA (%) | F<sub>SCD</sub> (%) |  mIoU (%) |   SeK (%) |
+| ------------- | ----------- | --------: | ------------------- | --------: | --------: |
+| **Mamba-FCS** | SECOND      | **88.62** | **65.78**           | **74.07** | **25.50** |
+| **Mamba-FCS** | Landsat-SCD | **96.25** | **89.27**           | **88.81** | **60.26** |
 
 Visuals speak louder: expect dramatically cleaner boundaries and far better rare-class detection.
+
+---
+
+## 🙏 Acknowledgements
+
+This work is strongly influenced by prior advances in state-space vision backbones and Mamba-based change detection.
+In particular, we acknowledge:
+
+* **VMamba (Visual State Space Models for Vision)** — backbone inspiration: [https://github.com/MzeroMiko/VMamba](https://github.com/MzeroMiko/VMamba)
+* **ChangeMamba** — Mamba-style change detection inspiration: [https://github.com/zj-liao/ChangeMamba](https://github.com/zj-liao/ChangeMamba)
+
+Mamba-FCS builds on these foundations and extends them with **explicit spatio–frequency fusion (FFT log-amplitude cues)** and **change-guided semantic refinement**, targeting robustness under illumination/seasonal variations and improved rare-class sensitivity.
 
 ---
 
@@ -204,6 +231,33 @@ If Mamba-FCS fuels your research, please cite:
   keywords={Remote sensing imagery;semantic change detection;separated kappa;spatial–frequency fusion;state-space models},
   doi={10.1109/JSTARS.2026.3663066}
 }
+```
+
+You might consider citing:
+
+```bibtex
+@misc{wijenayake2025precisionspatiotemporalfeaturefusion,
+      title={Precision Spatio-Temporal Feature Fusion for Robust Remote Sensing Change Detection}, 
+      author={Buddhi Wijenayake and Athulya Ratnayake and Praveen Sumanasekara and Nichula Wasalathilaka and Mathivathanan Piratheepan and Roshan Godaliyadda and Mervyn Ekanayake and Vijitha Herath},
+      year={2025},
+      eprint={2507.11523},
+      archivePrefix={arXiv},
+      primaryClass={eess.IV},
+      url={https://arxiv.org/abs/2507.11523}, 
+}
+```
+
+```bibtex
+@INPROCEEDINGS{11217111,
+  author={Ratnayake, R.M.A.M.B. and Wijenayake, W.M.B.S.K. and Sumanasekara, D.M.U.P. and Godaliyadda, G.M.R.I. and Herath, H.M.V.R. and Ekanayake, M.P.B.},
+  booktitle={2025 Moratuwa Engineering Research Conference (MERCon)}, 
+  title={Enhanced SCanNet with CBAM and Dice Loss for Semantic Change Detection}, 
+  year={2025},
+  volume={},
+  number={},
+  pages={84-89},
+  keywords={Training;Accuracy;Attention mechanisms;Sensitivity;Semantics;Refining;Feature extraction;Transformers;Power capacitors;Remote sensing},
+  doi={10.1109/MERCon67903.2025.11217111}}
 ```
 
 ---
