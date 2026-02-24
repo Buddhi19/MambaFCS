@@ -209,7 +209,7 @@ This work is strongly influenced by prior advances in state-space vision backbon
 In particular, we acknowledge:
 
 * **VMamba (Visual State Space Models for Vision)** — backbone inspiration: [https://github.com/MzeroMiko/VMamba](https://github.com/MzeroMiko/VMamba)
-* **ChangeMamba** — Mamba-style change detection inspiration: [https://github.com/zj-liao/ChangeMamba](https://github.com/zj-liao/ChangeMamba)
+* **ChangeMamba** — Mamba-style change detection inspiration: [https://github.com/ChenHongruixuan/ChangeMamba.git](https://github.com/ChenHongruixuan/ChangeMamba.git)
 
 Mamba-FCS builds on these foundations and extends them with **explicit spatio–frequency fusion (FFT log-amplitude cues)** and **change-guided semantic refinement**, targeting robustness under illumination/seasonal variations and improved rare-class sensitivity.
 
