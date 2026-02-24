@@ -262,8 +262,4 @@ You might consider citing:
 
 ---
 
-## 🌍🛰️ Let's detect real change — together.
-
-Got questions or ideas? Open an issue. Stars fuel development ⭐
-
-Happy experimenting!
+## 🌍🛰️ Got inspired? Give us a STAR 
