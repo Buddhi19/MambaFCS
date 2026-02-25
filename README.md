@@ -42,11 +42,11 @@ Visual State Space backbone fused with explicit spatio–frequency cues, bidirec
 
 ---
 
-## 🔥 Updates
-- **Paper Published** — IEEE JSTARS (Official DOI: https://doi.org/10.1109/JSTARS.2026.3663066)
-- **Accepted** — IEEE JSTARS (Camera-ready version submitted)
-- **Code Release** — Full training pipeline with structured YAML configurations now available
-- **Aug 2025** — Preprint available on arXiv: https://arxiv.org/abs/2508.08232
+## 🔥🔥 Updates
+- **Feb 2026 - Paper Published** — IEEE JSTARS (Official DOI: https://doi.org/10.1109/JSTARS.2026.3663066)
+- **Jan 2026 - Accepted** — IEEE JSTARS (Camera-ready version submitted)
+- **Jan 2026 - Code Released** — Full training pipeline with structured YAML configurations is now available
+- **Aug 2025 - Preprint Released** — Preprint available on arXiv: https://arxiv.org/abs/2508.08232
 
 Ready to push the boundaries of change detection? Let's go.
 
@@ -210,8 +210,6 @@ In particular, we acknowledge:
 
 * **VMamba (Visual State Space Models for Vision)** — backbone inspiration: [https://github.com/MzeroMiko/VMamba](https://github.com/MzeroMiko/VMamba)
 * **ChangeMamba** — Mamba-style change detection inspiration: [https://github.com/ChenHongruixuan/ChangeMamba.git](https://github.com/ChenHongruixuan/ChangeMamba.git)
-
-Mamba-FCS builds on these foundations and extends them with **explicit spatio–frequency fusion (FFT log-amplitude cues)** and **change-guided semantic refinement**, targeting robustness under illumination/seasonal variations and improved rare-class sensitivity.
 
 ---
 
