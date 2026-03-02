@@ -102,6 +102,12 @@ class SemanticChangeDetectionDatset(Dataset):
             pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_fliplr_mcd(pre_img, post_img, cd_label, t1_label, t2_label)
             pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_flipud_mcd(pre_img, post_img, cd_label, t1_label, t2_label)
             pre_img, post_img, cd_label, t1_label, t2_label = imutils.random_rot_mcd(pre_img, post_img, cd_label, t1_label, t2_label) 
+            # randomly change pre and post images with labels
+
+            if np.random.rand() < 0.5:
+                pre_img, post_img = post_img, pre_img
+                t1_label, t2_label = t2_label, t1_label
+
             pre_img= imutils.random_photometric_imgs(pre_img)
             post_img = imutils.random_photometric_imgs(post_img)
 
