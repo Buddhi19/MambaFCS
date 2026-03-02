@@ -13,8 +13,8 @@
   <a href="https://arxiv.org/abs/2508.08232">
     <img src="https://img.shields.io/badge/arXiv-2508.08232-b31b1b.svg" alt="arXiv">
   </a>
-  <a href="#">
-    <img src="https://img.shields.io/badge/Weights-coming%20soon-7B2CBF.svg" alt="Weights">
+  <a href="https://huggingface.co/buddhi19/MambaFCS/tree/main">
+    <img src="https://img.shields.io/badge/Hugging%20Face-Weights%20Available-FFD21E.svg" alt="Weights">
   </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
@@ -33,6 +33,7 @@ Visual State Space backbone fused with explicit spatio–frequency cues, bidirec
 <a href="#quickstart">⚡ Quick Start</a> •
 <a href="#data">🗂 Data</a> •
 <a href="#train--evaluation">🚀 Train & Eval</a> •
+<a href="#interactive-notebook">🧪 Interactive Notebook</a> •
 <a href="#results">📊 Results</a> •
 <a href="#acknowledgements">🙏 Acknowledgements</a> •
 <a href="#citation">📜 Cite</a>
@@ -43,6 +44,7 @@ Visual State Space backbone fused with explicit spatio–frequency cues, bidirec
 ---
 
 ## 🔥🔥 Updates
+- **Mar 2026 - Weights + Notebook Released** — Official Mamba-FCS checkpoints are now available on Hugging Face: https://huggingface.co/buddhi19/MambaFCS/tree/main, and the interactive evaluation/annotation notebook is available at `annotations/MambaFCS.ipynb`
 - **Feb 2026 - Paper Published** — IEEE JSTARS (Official DOI: https://doi.org/10.1109/JSTARS.2026.3663066)
 - **Jan 2026 - Accepted** — IEEE JSTARS (Camera-ready version submitted)
 - **Jan 2026 - Code Released** — Full training pipeline with structured YAML configurations is now available
@@ -102,7 +104,13 @@ Simple. Smart. Superior.
 
 ## ⚡ Quick Start
 
-### 1. Grab Pre-trained VMamba Weights
+### 1. Download Released Mamba-FCS Weights
+
+Pretrained Mamba-FCS checkpoints are now hosted on Hugging Face: [buddhi19/MambaFCS](https://huggingface.co/buddhi19/MambaFCS/tree/main).
+
+Use these weights directly for inference and evaluation, or keep them alongside your experiment checkpoints for quick benchmarking.
+
+### 2. Grab Pre-trained VMamba Weights
 
 | Model         | Links                                                                                                    |
 |---------------|----------------------------------------------------------------------------------------------------------|
@@ -112,7 +120,7 @@ Simple. Smart. Superior.
 
 Set `pretrained_weight_path` in your YAML to the downloaded `.pth`.
 
-### 2. Install
+### 3. Install
 
 ```bash
 git clone https://github.com/Buddhi19/MambaFCS.git
@@ -126,7 +134,7 @@ pip install -r requirements.txt
 pip install pyyaml
 ````
 
-### 3. Build Selective Scan Kernel (Critical Step)
+### 4. Build Selective Scan Kernel (Critical Step)
 
 ```bash
 cd kernels/selective_scan
@@ -187,6 +195,21 @@ python train.py --config configs/train_SECOND.yaml
 Checkpoints + TensorBoard logs land in `saved_models/<your_name>/`.
 
 Resume runs? Just flip `resume: true` and point to optimizer/scheduler states.
+
+---
+
+<a id="interactive-notebook"></a>
+## 🧪 Interactive Evaluation & Annotation
+
+For an interactive workflow, use the notebook [`annotations/MambaFCS.ipynb`](annotations/MambaFCS.ipynb).
+
+It is set up for users who want to:
+
+- run evaluations interactively
+- inspect predictions and qualitative outputs
+- perform annotation and review in a notebook-driven workflow
+
+Pair it with the released checkpoints on [Hugging Face](https://huggingface.co/buddhi19/MambaFCS/tree/main) for fast experimentation without retraining.
 
 ---
 
