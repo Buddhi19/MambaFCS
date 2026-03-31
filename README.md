@@ -4,28 +4,30 @@
 
 <h2>Joint Spatio-Frequency Feature Fusion with Change-Guided Attention and SeK Loss</h2>
 
-<h2>🏆 Current Best-Performing Algorithm for Semantic Change Detection 🏆</h2>
+<h2>🏆 Current Best-Performing Algorithm for Remote Sensing Semantic Change Detection 🏆</h2>
 
-<p>
+<p align="center">
   <a href="https://ieeexplore.ieee.org/document/11391528">
-    <img src="https://img.shields.io/badge/IEEE%20JSTARS-Official%20Publication-00629B.svg" alt="IEEE JSTARS Paper">
+    <img src="https://img.shields.io/badge/IEEE%20JSTARS-Published%20Paper-00629B?logo=ieee&logoColor=white" alt="IEEE JSTARS Published Paper">
   </a>
   <a href="https://arxiv.org/abs/2508.08232">
-    <img src="https://img.shields.io/badge/arXiv-2508.08232-b31b1b.svg" alt="arXiv">
+    <img src="https://img.shields.io/badge/arXiv-2508.08232-B31B1B?logo=arxiv&logoColor=white" alt="arXiv Preprint">
   </a>
   <a href="https://huggingface.co/buddhi19/MambaFCS/tree/main">
-    <img src="https://img.shields.io/badge/Hugging%20Face-Weights%20Available-FFD21E.svg" alt="Weights">
+    <img src="https://img.shields.io/badge/Hugging%20Face-Model%20Weights-FFD21E?logo=huggingface&logoColor=black" alt="Hugging Face Model Weights">
   </a>
   <a href="LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
+    <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License">
+  </a>
+  <a href="#-citations">
+    <img src="https://img.shields.io/badge/Citations-1-blue.svg" alt="Citations">
   </a>
 </p>
-
 <p>
 Visual State Space backbone fused with explicit spatio–frequency cues, bidirectional change guidance, and class-imbalance-aware loss—delivering robust, precise semantic change detection under tough illumination/seasonal shifts and severe long-tail labels.
 </p>
 
-<p>
+<!-- <p>
 <a href="#updates">🔥 Updates</a> •
 <a href="#overview">🔭 Overview</a> •
 <a href="#why-spatiofrequency-matters">✨ Why Spatio–Frequency?</a> •
@@ -37,14 +39,15 @@ Visual State Space backbone fused with explicit spatio–frequency cues, bidirec
 <a href="#results">📊 Results</a> •
 <a href="#acknowledgements">🙏 Acknowledgements</a> •
 <a href="#citation">📜 Cite</a>
-</p>
+</p> -->
 
 </div>
 
 ---
 
 ## 🔥🔥 Updates
-- **Mar 2026 - Weights + Notebook Released** — Official Mamba-FCS checkpoints are now available on Hugging Face: https://huggingface.co/buddhi19/MambaFCS/tree/main, and the interactive evaluation/annotation notebook is available at `annotations/MambaFCS.ipynb`
+- **Mar 2026 - Notebook Released** For an interactive workflow, use the notebook **✨✨[`annotations/MambaFCS.ipynb`](annotations/MambaFCS.ipynb)✨✨**.
+- **Mar 2026 - Weights + Notebook Released** — Official Mamba-FCS checkpoints are now available on **🤗🤗[Hugging Face](https://huggingface.co/buddhi19/MambaFCS/tree/main)🤗🤗**.
 - **Feb 2026 - Paper Published** — IEEE JSTARS (Official DOI: https://doi.org/10.1109/JSTARS.2026.3663066)
 - **Jan 2026 - Accepted** — IEEE JSTARS (Camera-ready version submitted)
 - **Jan 2026 - Code Released** — Full training pipeline with structured YAML configurations is now available
@@ -61,7 +64,7 @@ Semantic Change Detection in remote sensing is tough: seasonal shifts, lighting 
 Mamba-FCS changes the game:
 
 - **VMamba backbone** → linear-time long-range modeling (no more transformer VRAM nightmares)  
-- **JSF spatio–frequency fusion** → injects FFT log-amplitude cues into spatial features for appearance invariance + sharper boundaries  
+- **Joint spatio–frequency fusion** → injects FFT log-amplitude cues into spatial features for appearance invariance + sharper boundaries  
 - **CGA module** → change probabilities actively guide semantic refinement (and vice versa)  
 - **SeK Loss** → finally treats rare classes with the respect they deserve  
 
@@ -76,15 +79,11 @@ Outcome: cleaner maps, stronger rare-class recall, and real-world resilience.
 
 ## ✨ Why Spatio–Frequency Matters
 
-Remote sensing change detection suffers from **appearance shifts** (illumination, seasonal phenology, atmospheric effects).  
-Purely spatial feature fusion can overfit to texture/color changes, while **frequency-domain cues** capture structure and boundaries more consistently.
+The frequency domain is known to reveal latent structures in signals that remain obscure in the spatial domain. 
 
-**Mamba-FCS explicitly combines:**
-- **Spatial modeling (VMamba / state-space)** for long-range context
-- **Frequency cues (FFT log-amplitude)** for appearance robustness
-- **Change-guided cross-task attention** to tighten BCD ↔ SCD synergy
+### Building on this premise, we explore whether Fourier transformation of latent representations can expose similarly discriminative hidden features.
 
-This spatio–frequency + change-guided design is a key reason for strong rare-class performance and cleaner semantic boundaries.
+This spatio–frequency, change-guided design is a key factor underlying improved rare-class performance and sharper semantic boundary delineation.
 
 ---
 
@@ -244,28 +243,30 @@ If Mamba-FCS fuels your research, please cite:
 @ARTICLE{mambafcs,
   author={Wijenayake, Buddhi and Ratnayake, Athulya and Sumanasekara, Praveen and Godaliyadda, Roshan and Ekanayake, Parakrama and Herath, Vijitha and Wasalathilaka, Nichula},
   journal={IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing}, 
-  title={Mamba-FCS: Joint Spatio-Frequency Feature Fusion, Change-Guided Attention, and Sek Inspired Loss for Enhanced Semantic Change Detection in Remote Sensing}, 
+  title={Mamba-FCS: Joint Spatio-Frequency Feature Fusion, Change-Guided Attention, and SeK Inspired Loss for Enhanced Semantic Change Detection in Remote Sensing}, 
   year={2026},
-  volume={},
+  volume={19},
   number={},
-  pages={1-19},
-  keywords={Remote sensing imagery;semantic change detection;separated kappa;spatial–frequency fusion;state-space models},
-  doi={10.1109/JSTARS.2026.3663066}
-}
+  pages={7680-7698},
+  keywords={Semantics;Feature extraction;Transformers;Remote sensing;Frequency-domain analysis;Decoding;Computational modeling;Computer architecture;Context modeling;Lighting;Remote sensing imagery;semantic change detection (CD);separated Kappa (SeK);spatial–frequency fusion;state-space models (SSMs)},
+  doi={10.1109/JSTARS.2026.3663066}}
+
 ```
 
 You might consider citing:
 
 ```bibtex
-@misc{wijenayake2025precisionspatiotemporalfeaturefusion,
-      title={Precision Spatio-Temporal Feature Fusion for Robust Remote Sensing Change Detection}, 
-      author={Buddhi Wijenayake and Athulya Ratnayake and Praveen Sumanasekara and Nichula Wasalathilaka and Mathivathanan Piratheepan and Roshan Godaliyadda and Mervyn Ekanayake and Vijitha Herath},
-      year={2025},
-      eprint={2507.11523},
-      archivePrefix={arXiv},
-      primaryClass={eess.IV},
-      url={https://arxiv.org/abs/2507.11523}, 
-}
+@INPROCEEDINGS{11450773,
+  author={Wijenayake, W.M.B.S.K. and Ratnayake, R.M.A.M.B. and Sumanasekara, D.M.U.P. and Wasalathilaka, N.S. and Piratheepan, M. and Godaliyadda, G.M.R.I. and Ekanayake, M.P.B. and Herath, H.M.V.R.},
+  booktitle={2025 IEEE 19th International Conference on Industrial and Information Systems (ICIIS)}, 
+  title={Precision Spatio-Temporal Feature Fusion for Robust Remote Sensing Change Detection}, 
+  year={2026},
+  volume={19},
+  number={},
+  pages={557-562},
+  keywords={Accuracy;Computational modeling;Pipelines;Feature extraction;Transformers;Decoding;Remote sensing;Optimization;Monitoring;Context modeling;Remote Sensing;Binary Change Detection;State Space Models;Mamba},
+  doi={10.1109/ICIIS69028.2026.11450773}}
+
 ```
 
 ```bibtex
@@ -283,4 +284,11 @@ You might consider citing:
 
 ---
 
-## 🌍🛰️ Got inspired? Give us a STAR 
+## 🌍🛰️ Got inspired? Give us a STAR🌟🌟
+
+### 🧾 Citing Works
+
+1. **Shen, H., et al. (2026)**  
+   *Foundation Model-Driven Semantic Change Detection in Remote Sensing Imagery*  
+   [📄 arXiv:2602.13780](https://arxiv.org/abs/2602.13780)
+
