@@ -214,13 +214,70 @@ Pair it with the released checkpoints on [Hugging Face](https://huggingface.co/b
 
 ## 📊 Results
 
-Straight from the paper — reproducible out of the box:
+<p><strong>Straight from the paper — reproducible out of the box:</strong></p>
 
-| Method        | Dataset     |    OA (%) | F<sub>SCD</sub> (%) |  mIoU (%) |   SeK (%) |
-| ------------- | ----------- | --------: | ------------------- | --------: | --------: |
-| **Mamba-FCS** | SECOND      | **88.62** | **65.78**           | **74.07** | **25.50** |
-| **Mamba-FCS** | Landsat-SCD | **96.25** | **89.27**           | **88.81** | **60.26** |
-
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Dataset</th>
+      <th>OA (%)</th>
+      <th>F<sub>SCD</sub> (%)</th>
+      <th>mIoU (%)</th>
+      <th>SeK (%)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>SCanNet</td>
+      <td>SECOND</td>
+      <td>87.86</td>
+      <td>63.66</td>
+      <td>73.42</td>
+      <td>23.94</td>
+    </tr>
+    <tr>
+      <td>ChangeMamba</td>
+      <td>SECOND</td>
+      <td>88.12</td>
+      <td>64.03</td>
+      <td>73.68</td>
+      <td>24.11</td>
+    </tr>
+    <tr>
+      <td><span style="color:red;"><strong>Mamba-FCS</strong></span></td>
+      <td>SECOND</td>
+      <td><span style="color:red;"><strong>88.62</strong></span></td>
+      <td><span style="color:red;"><strong>65.78</strong></span></td>
+      <td><span style="color:red;"><strong>74.07</strong></span></td>
+      <td><span style="color:red;"><strong>25.50</strong></span></td>
+    </tr>
+    <tr>
+      <td>SCanNet</td>
+      <td>Landsat-SCD</td>
+      <td>96.04</td>
+      <td>85.62</td>
+      <td>86.37</td>
+      <td>52.63</td>
+    </tr>
+    <tr>
+      <td>ChangeMamba</td>
+      <td>Landsat-SCD</td>
+      <td>96.08</td>
+      <td>86.61</td>
+      <td>86.91</td>
+      <td>53.66</td>
+    </tr>
+    <tr>
+      <td><span style="color:red;"><strong>Mamba-FCS</strong></span></td>
+      <td>Landsat-SCD</td>
+      <td><span style="color:red;"><strong>96.25</strong></span></td>
+      <td><span style="color:red;"><strong>89.27</strong></span></td>
+      <td><span style="color:red;"><strong>88.81</strong></span></td>
+      <td><span style="color:red;"><strong>60.26</strong></span></td>
+    </tr>
+  </tbody>
+</table>
 Visuals speak louder: expect dramatically cleaner boundaries and far better rare-class detection.
 
 ---
