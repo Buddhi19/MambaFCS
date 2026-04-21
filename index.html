@@ -53,10 +53,7 @@
               Mamba-FCS: Joint Spatio-Frequency Feature Fusion, Change-Guided Attention, and SeK Inspired Loss for Enhanced Semantic Change Detection in Remote Sensing
             </h1>
             <p class="subtitle publication-summary">
-              Mamba-FCS combines VMamba-based long-range context modeling, joint spatial-frequency fusion,
-              change-guided semantic refinement, and a SeK-inspired imbalance-aware objective to improve
-              remote-sensing change analysis under illumination shifts, seasonal variation, and long-tail
-              land-cover transitions.
+            Mamba-FCS sets a new state of the art in semantic change detection, achieving 88.62 OA, 65.78 F_SCD, 74.07 mIoU, and 25.50 SeK on SECOND, and 96.25 OA, 89.27 F_SCD, 88.81 mIoU, and 60.26 SeK on Landsat-SCD, through VMamba-based long-range context modeling, joint spatial-frequency fusion, change-guided semantic refinement, and a SeK-inspired imbalance-aware objective.
             </p>
 
             <div class="publication-authors">
@@ -271,7 +268,147 @@
         </div>
       </div>
 
-      <div class="image-grid">
+      <div class="qualitative-comparison">
+        <h3 class="title is-4">Qualitative SOTA comparison</h3>
+        <p class="qual-example-label">Example 02227</p>
+        <div class="qual-row">
+          <figure>
+            <img src="./sota_comparision/02227_pre.png" alt="Pre-change remote sensing image.">
+            <figcaption>Pre image</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02227_gt_t1.png" alt="Ground-truth semantic map for timestamp 1.">
+            <figcaption>Ground truth</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02227_pred_t1.png" alt="Mamba-FCS predicted semantic map for timestamp 1.">
+            <figcaption>Mamba-FCS (Pred T1)</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02227_A_MAMBA.png" alt="ChangeMamba predicted semantic map for timestamp 1.">
+            <figcaption>ChangeMamba (MAMBA)</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02227_A_SCanNet_Original.png" alt="SCanNet predicted semantic map for timestamp 1.">
+            <figcaption>SCanNet</figcaption>
+          </figure>
+        </div>
+        <div class="qual-row">
+          <figure>
+            <img src="./sota_comparision/02227_post.png" alt="Post-change remote sensing image.">
+            <figcaption>Post image</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02227_gt_t2.png" alt="Ground-truth semantic map for timestamp 2.">
+            <figcaption>Ground truth</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02227_pred_t2.png" alt="Mamba-FCS predicted semantic map for timestamp 2.">
+            <figcaption>Mamba-FCS (Pred T2)</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02227_B_MAMBA.png" alt="ChangeMamba predicted semantic map for timestamp 2.">
+            <figcaption>ChangeMamba (MAMBA)</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02227_B_SCanNet_Original.png" alt="SCanNet predicted semantic map for timestamp 2.">
+            <figcaption>SCanNet</figcaption>
+          </figure>
+        </div>
+        <p class="qual-example-label">Example 02736</p>
+        <div class="qual-row">
+          <figure>
+            <img src="./sota_comparision/02736_pre.png" alt="Pre-change remote sensing image for example 02736.">
+            <figcaption>Pre image</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02736_gt_t1.png" alt="Ground-truth semantic map for timestamp 1 in example 02736.">
+            <figcaption>Ground truth</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02736_pred_t1.png" alt="Mamba-FCS predicted semantic map for timestamp 1 in example 02736.">
+            <figcaption>Mamba-FCS (Pred T1)</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02736_A_MAMBA.png" alt="ChangeMamba predicted semantic map for timestamp 1 in example 02736.">
+            <figcaption>ChangeMamba (MAMBA)</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02736_A_SCanNet_Original.png" alt="SCanNet predicted semantic map for timestamp 1 in example 02736.">
+            <figcaption>SCanNet</figcaption>
+          </figure>
+        </div>
+        <div class="qual-row">
+          <figure>
+            <img src="./sota_comparision/02736_post.png" alt="Post-change remote sensing image for example 02736.">
+            <figcaption>Post image</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02736_gt_t2.png" alt="Ground-truth semantic map for timestamp 2 in example 02736.">
+            <figcaption>Ground truth</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02736_pred_t2.png" alt="Mamba-FCS predicted semantic map for timestamp 2 in example 02736.">
+            <figcaption>Mamba-FCS (Pred T2)</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02736_B_MAMBA.png" alt="ChangeMamba predicted semantic map for timestamp 2 in example 02736.">
+            <figcaption>ChangeMamba (MAMBA)</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/02736_B_SCanNet_Original.png" alt="SCanNet predicted semantic map for timestamp 2 in example 02736.">
+            <figcaption>SCanNet</figcaption>
+          </figure>
+        </div>
+        <p class="qual-example-label">Example 12808</p>
+        <div class="qual-row">
+          <figure>
+            <img src="./sota_comparision/12808_pre.png" alt="Pre-change remote sensing image for example 12808.">
+            <figcaption>Pre image</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/12808_gt_t1.png" alt="Ground-truth semantic map for timestamp 1 in example 12808.">
+            <figcaption>Ground truth</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/12808_pred_t1.png" alt="Mamba-FCS predicted semantic map for timestamp 1 in example 12808.">
+            <figcaption>Mamba-FCS (Pred T1)</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/12808_A_MAMBA.png" alt="ChangeMamba predicted semantic map for timestamp 1 in example 12808.">
+            <figcaption>ChangeMamba (MAMBA)</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/12808_A_SCanNet_Original.png" alt="SCanNet predicted semantic map for timestamp 1 in example 12808.">
+            <figcaption>SCanNet</figcaption>
+          </figure>
+        </div>
+        <div class="qual-row">
+          <figure>
+            <img src="./sota_comparision/12808_post.png" alt="Post-change remote sensing image for example 12808.">
+            <figcaption>Post image</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/12808_gt_t2.png" alt="Ground-truth semantic map for timestamp 2 in example 12808.">
+            <figcaption>Ground truth</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/12808_pred_t2.png" alt="Mamba-FCS predicted semantic map for timestamp 2 in example 12808.">
+            <figcaption>Mamba-FCS (Pred T2)</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/12808_B_MAMBA.png" alt="ChangeMamba predicted semantic map for timestamp 2 in example 12808.">
+            <figcaption>ChangeMamba (MAMBA)</figcaption>
+          </figure>
+          <figure>
+            <img src="./sota_comparision/12808_B_SCanNet_Original.png" alt="SCanNet predicted semantic map for timestamp 2 in example 12808.">
+            <figcaption>SCanNet</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="split-analysis">
+        <h3 class="title is-4">Dataset Test Split Analysis</h3>
         <figure class="figure-panel">
           <img src="./resources/confusion_second.png" alt="SECOND from-to transition confusion matrix analysis.">
           <figcaption>SECOND transition-level analysis.</figcaption>
@@ -341,12 +478,14 @@
           Remote Sensing</em>, vol. 19, pp. 7680-7698, 2026. DOI: 10.1109/JSTARS.2026.3663066.
         </p>
         <pre class="bibtex"><code>@ARTICLE{mambafcs2026,
-  author={Wijenayake, Buddhi and Ratnayake, Athulya and Sumanasekara, Praveen and Godaliyadda, Roshan and Ekanayake, Parakrama and Herath, Vijitha and Wasalathilaka, Nichula},
-  title={Mamba-FCS: Joint Spatio-Frequency Feature Fusion, Change-Guided Attention, and SeK Inspired Loss for Enhanced Semantic Change Detection in Remote Sensing},
-  journal={IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing},
+author={Wijenayake, Buddhi and Ratnayake, Athulya and Sumanasekara, Praveen and Godaliyadda, Roshan and Ekanayake, Parakrama and Herath, Vijitha and Wasalathilaka, Nichula},
+  journal={IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing}, 
+  title={Mamba-FCS: Joint Spatio-Frequency Feature Fusion, Change-Guided Attention, and SeK Inspired Loss for Enhanced Semantic Change Detection in Remote Sensing}, 
   year={2026},
   volume={19},
-  pages={7680--7698},
+  number={},
+  pages={7680-7698},
+  keywords={Semantics;Feature extraction;Transformers;Remote sensing;Frequency-domain analysis;Decoding;Computational modeling;Computer architecture;Context modeling;Lighting;Remote sensing imagery;semantic change detection (CD);separated Kappa (SeK);spatial–frequency fusion;state-space models (SSMs)},
   doi={10.1109/JSTARS.2026.3663066}
 }</code></pre>
       </div>
@@ -365,6 +504,9 @@
         <a href="https://arxiv.org/abs/2508.08232">arXiv</a>
         <a href="https://github.com/Buddhi19/MambaFCS">GitHub</a>
         <a href="https://huggingface.co/buddhi19/MambaFCS">Hugging Face</a>
+      </p>
+      <p>
+        Website template adapted from <a href="https://github.com/nerfies/nerfies.github.io.git">Nerfies</a>.
       </p>
     </div>
   </div>

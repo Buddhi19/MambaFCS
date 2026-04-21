@@ -134,6 +134,18 @@ a:hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.split-analysis {
+  margin-top: 2rem;
+}
+
+.split-analysis .figure-panel {
+  margin-bottom: 2rem;
+}
+
+.split-analysis img {
+  width: 100%;
+}
+
 .contribution,
 .callout {
   background: #fff;
@@ -153,6 +165,52 @@ a:hover {
 .contribution p,
 .callout p {
   color: #4a4a4a;
+}
+
+.qualitative-comparison {
+  margin: 1.5rem 0 2rem;
+}
+
+.qualitative-comparison .title {
+  margin-bottom: 1rem;
+}
+
+.qual-example-label {
+  color: #555;
+  font-family: "Google Sans", sans-serif;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+}
+
+.qual-row {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-bottom: 1rem;
+}
+
+.qual-row figure {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin: 0;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.qual-row img {
+  border-radius: 4px;
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.qual-row figcaption {
+  color: #333;
+  font-family: "Google Sans", sans-serif;
+  font-size: 0.88rem;
+  line-height: 1.25;
+  margin-top: 0.45rem;
 }
 
 .step {
@@ -399,6 +457,10 @@ a:hover {
   .image-grid,
   .plots-grid {
     grid-template-columns: 1fr;
+  }
+
+  .qual-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .reproducibility-table,
