@@ -1,208 +1,373 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>Mamba-FCS: Joint Spatio-Frequency Feature Fusion, Change-Guided Attention, and SeK Loss for Enhanced Semantic Change Detection in Remote Sensing</title>
-	<meta property="og:image" content="./resources/teaser.png"/> 
-	<meta property="og:title" content="Mamba-FCS: Joint Spatio-Frequency Feature Fusion, Change-Guided Attention, and SeK Loss for Enhanced Semantic Change Detection in Remote Sensing" />
-	<meta property="og:description" content="We introduce Mamba-FCS, a novel SCD framework built on a Visual State Space Model backbone. It features Joint Spatio-Frequency Fusion, Change-Guided Attention, and a Separated Kappa (SeK) loss for class-imbalanced optimization. Achieves SOTA on SECOND and Landsat-SCD datasets." />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Mamba-FCS is a JSTARS 2026 semantic change detection framework for remote sensing using VMamba, joint spatio-frequency fusion, change-guided attention, and SeK-inspired optimization.">
+  <meta name="keywords" content="Mamba-FCS, semantic change detection, remote sensing, VMamba, state-space models, spatial-frequency fusion, spatio-frequency fusion, change-guided attention, SeK, SECOND, Landsat-SCD">
+  <meta property="og:title" content="Mamba-FCS">
+  <meta property="og:description" content="Joint spatio-frequency feature fusion, change-guided attention, and SeK-inspired loss for enhanced semantic change detection in remote sensing.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="./resources/full_architecture.png">
+  <title>Mamba-FCS: Semantic Change Detection in Remote Sensing</title>
 
-	<!-- Get from Google Analytics -->
-	<!-- Global site tag (gtag.js) - Google Analytics -->
-	<script async src=""></script> 
-	<script>
-		window.dataLayer = window.dataLayer || [];
-		function gtag(){dataLayer.push(arguments);}
-		gtag('js', new Date());
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/b.png">
 
-		gtag('config', 'UA-75863369-6');
-	</script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script defer src="./static/js/index.js"></script>
 </head>
-
 <body>
-	<br>
-	<center>
-		<span style="font-size:36px">Mamba-FCS: Joint Spatio-Frequency Feature Fusion, Change-Guided Attention, and SeK Loss for Enhanced Semantic Change Detection in Remote Sensing</span>
-		<table align=center width=1100px>
-			<tr>
-				<td align=center width=150px>
-					<center>
-						<span style="font-size:24px"><a href="https://scholar.google.com/citations?user=HDFMos8AAAAJ&hl=en">Buddhi Wijenayake</a></span>
-					</center>
-				</td>
-				<td align=center width=150px>
-					<center>
-						<span style="font-size:24px"><a href="https://scholar.google.com/citations?user=qQGNVkIAAAAJ&hl=en">Athulya Ratnayake</a></span>
-					</center>
-				</td>
-				<td align=center width=150px>
-					<center>
-						<span style="font-size:24px"><a href="https://scholar.google.com/citations?user=DE1-B4MAAAAJ&hl=en">Praveen Sumanasekara</a></span>
-					</center>
-				</td>
-				<td align=center width=150px>
-					<center>
-						<span style="font-size:24px"><a href="https://scholar.google.com/citations?user=6_XOJbsAAAAJ&hl=en">Roshan Godaliyadda</a></span>
-					</center>
-				</td>
-			</tr>
-			<tr>
-				<td align=center width=150px>
-					<center>
-						<span style="font-size:24px">Parakrama Ekanayake</span>
-					</center>
-				</td>
-				<td align=center width=150px>
-					<center>
-						<span style="font-size:24px">Vijitha Herath</span>
-					</center>
-				</td>
-				<td align=center width=150px>
-					<center>
-						<span style="font-size:24px">Nichula Wasalathilaka</span>
-					</center>
-				</td>
-				<td align=center width=150px>
-					<!-- empty for alignment -->
-				</td>
-			</tr>
-		</table>
-		<table align=center width=420px>
-			<tr>
-				<td align=center width=200px>
-					<center>
-						<span style="font-size:24px"><a href="https://arxiv.org/abs/2508.08232">[Paper]</a></span>
-					</center>
-				</td>
-				<td align=center width=200px>
-					<center>
-						<span style="font-size:24px"><a href="https://github.com/Buddhi19/MambaFCS">[GitHub]</a></span><br>
-					</center>
-				</td>
-			</tr>
-		</table>
-	</center>
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item brand" href="#top" aria-label="Mamba-FCS home">Mamba-FCS</a>
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="main-nav">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div id="main-nav" class="navbar-menu">
+    <div class="navbar-end">
+      <a class="navbar-item" href="#method">Method</a>
+      <a class="navbar-item" href="#results">Results</a>
+      <a class="navbar-item" href="#analysis">Analysis</a>
+      <a class="navbar-item" href="#reproducibility">Reproducibility</a>
+      <a class="navbar-item" href="#citation">Citation</a>
+    </div>
+  </div>
+</nav>
 
-	<center>
-		<table align=center width=850px>
-			<tr>
-				<td width=260px>
-					<center>
-						<img class="round" style="width:500px" src="./resources/teaser.png"/>
-					</center>
-				</td>
-			</tr>
-		</table>
-		<table align=center width=850px>
-			<tr>
-				<td>
-					This webpage was built using the <a href="https://github.com/richzhang/webpage-template">webpage template</a> originally created for the Colorful Image Colorization project.
-				</td>
-			</tr>
-		</table>
-	</center>
+<main id="top">
+  <section class="hero publication-hero">
+    <div class="hero-body">
+      <div class="container is-max-widescreen">
+        <div class="columns is-centered">
+          <div class="column is-10 has-text-centered">
+            <p class="eyebrow">IEEE JSTARS 2026</p>
+            <h1 class="title publication-title">
+              Mamba-FCS: Joint Spatio-Frequency Feature Fusion, Change-Guided Attention, and SeK Inspired Loss for Enhanced Semantic Change Detection in Remote Sensing
+            </h1>
+            <p class="subtitle publication-summary">
+              Mamba-FCS combines VMamba-based long-range context modeling, joint spatial-frequency fusion,
+              change-guided semantic refinement, and a SeK-inspired imbalance-aware objective to improve
+              remote-sensing change analysis under illumination shifts, seasonal variation, and long-tail
+              land-cover transitions.
+            </p>
 
-	<hr>
+            <div class="publication-authors">
+              <span class="author-block"><a href="https://scholar.google.com/citations?user=HDFMos8AAAAJ">Buddhi Wijenayake</a><sup>*</sup></span>
+              <span class="author-block"><a href="https://scholar.google.com/citations?user=qQGNVkIAAAAJ">Athulya Ratnayake</a></span>
+              <span class="author-block"><a href="https://scholar.google.com/citations?user=DE1-B4MAAAAJ">Praveen Sumanasekara</a></span>
+              <span class="author-block"><a href="https://scholar.google.com/citations?user=6_XOJbsAAAAJ">Roshan Godaliyadda</a></span>
+              <span class="author-block"><a href="https://scholar.google.com/citations?user=uJvb7zwAAAAJ">Parakrama Ekanayake</a></span>
+              <span class="author-block"><a href="https://scholar.google.com/citations?user=f5h5ByUAAAAJ">Vijitha Herath</a></span>
+              <span class="author-block"><a href="https://scholar.google.com/citations?user=704xSSwAAAAJ">Nichula Wasalathilaka</a></span>
+            </div>
 
-	<table align=center width=850px>
-		<center><h1>Abstract</h1></center>
-		<tr>
-			<td>
-				In this study, we introduce <b>Mamba-FCS</b>, a Semantic Change Detection (SCD) framework built upon a Visual State Space Model (Mamba) backbone. It incorporates three key contributions: (1) a Joint Spatio-Frequency Fusion block that integrates log-amplitude frequency-domain features to enhance edge clarity and suppress illumination artifacts, (2) a Change-Guided Attention (CGA) module that explicitly links the naturally intertwined Binary Change Detection (BCD) and SCD tasks, and (3) a Separated Kappa (SeK) loss tailored for class-imbalanced performance optimization. Extensive evaluation on the SECOND and Landsat-SCD datasets shows that Mamba-FCS achieves state-of-the-art metrics: 88.62% Overall Accuracy, 65.78% F<sub>scd</sub>, and 25.50% SeK on SECOND; 96.25% Overall Accuracy, 89.27% F<sub>scd</sub>, and 60.26% SeK on Landsat-SCD. Ablation studies confirm the distinct contributions of each component, while qualitative results highlight significant improvements in SCD. Our work demonstrates the strong potential of Mamba architectures for scalable and effective semantic change detection in remote sensing.
-			</td>
-		</tr>
-	</table>
-	<br>
+            <p class="affiliation">Department of Electrical and Electronic Engineering, University of Peradeniya, Sri Lanka</p>
+            <p class="corresponding"><sup>*</sup>Corresponding author</p>
 
-	<hr>
-	<center><h1>Talk</h1></center>
-	<p align="center">
-		<!-- No conference talk video available yet. Replace the src below with your YouTube link when ready. -->
-		<iframe width="660" height="395" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen align="center"></iframe>
-	</p>
+            <div class="publication-links">
+              <a href="https://doi.org/10.1109/JSTARS.2026.3663066" class="external-link button is-normal is-rounded is-dark">
+                <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                <span>Paper</span>
+              </a>
+              <a href="https://arxiv.org/abs/2508.08232" class="external-link button is-normal is-rounded is-dark">
+                <span class="icon"><i class="ai ai-arxiv"></i></span>
+                <span>arXiv</span>
+              </a>
+              <a href="https://github.com/Buddhi19/MambaFCS" class="external-link button is-normal is-rounded is-dark">
+                <span class="icon"><i class="fab fa-github"></i></span>
+                <span>Code</span>
+              </a>
+              <a href="https://huggingface.co/buddhi19/MambaFCS" class="external-link button is-normal is-rounded is-dark">
+                <span class="icon"><i class="fas fa-database"></i></span>
+                <span>Weights</span>
+              </a>
+              <a href="https://github.com/Buddhi19/MambaFCS/blob/main/annotations/MambaFCS.ipynb" class="external-link button is-normal is-rounded is-dark">
+                <span class="icon"><i class="fas fa-book-open"></i></span>
+                <span>Notebook</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-	<table align=center width=800px>
-		<br>
-		<tr>
-			<center>
-				<span style="font-size:28px"><a href=''>[Slides]</a>
-				</span>
-			</center>
-		</tr>
-	</table>
-	<hr>
+  <section class="section" id="abstract">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+             Semantic Change Detection (SCD) in remote sensing imagery requires models that integrate extensive spatial context for broad geographic patterns, computational efficiency for large-scale datasets, and sensitivity to class-imbalanced land-cover transitions to detect rare or asymmetric changes. Early SCD approaches relied on Convolutional Neural Networks, which excel in local feature extraction but falter in modeling global spatial context due to limited receptive fields. Transformers mitigate this by capturing long-range dependencies via self-attention, yet their quadratic complexity impairs efficiency on vast remote sensing data. Emerging Mamba architectures, based on state-space models, strike a balance with linear complexity and robust long-range modeling, delivering efficient global context capture and improved performance. In this study, we introduce Mamba-FCS, an SCD framework leveraging a Visual State Space Model backbone, with three key contributions: A Joint Spatio-Frequency Fusion block that integrates log-amplitude frequency-domain features to sharpen edges and mitigate illumination artifacts, a Change-Guided Attention (CGA) module that explicitly bridges the intertwined Binary Change Detection and SCD tasks, and a novel loss function inspired by the Separated Kappa (SeK) metric to optimize for class imbalance. Experiments on the benchmark datasets show that Mamba-FCS consistently outperforms recent state-of-the-art algorithms. Ablation studies indicate that spatio–frequency fusion and CGA mainly sharpen boundaries and suppress hallucinated changes, while the SeK-inspired loss improves minority-class semantics. These results highlight the potential of Mamba-FCS as a scalable and accurate approach for remote sensing change detection.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-	<center><h1>Code</h1></center>
+  <section class="section" id="why">
+    <div class="container is-max-widescreen">
+      <div class="columns is-variable is-6">
+        <div class="column is-one-third">
+          <p class="eyebrow">Why this paper matters</p>
+          <h2 class="title is-3">Three linked ideas</h2>
+          <p class="lead">
+            Mamba-FCS improves semantic change detection by connecting efficient global context,
+            spatial-frequency evidence, and imbalance-aware optimization in one pipeline.
+          </p>
+        </div>
+        <div class="column">
+          <div class="contribution-grid">
+            <article class="contribution">
+              <span class="step">01</span>
+              <h3>Spatial-frequency fusion</h3>
+              <p>FFT log-amplitude cues complement spatial features, sharpening boundaries and reducing appearance-related noise from illumination and seasonal variation.</p>
+            </article>
+            <article class="contribution">
+              <span class="step">02</span>
+              <h3>Change-guided attention</h3>
+              <p>Intermediate binary change cues guide both semantic decoders, tightening consistency between where change happens and which classes change.</p>
+            </article>
+            <article class="contribution">
+              <span class="step">03</span>
+              <h3>SeK-inspired optimization</h3>
+              <p>The loss directly targets semantic consistency under long-tail transition imbalance instead of relying only on standard segmentation losses.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-	<table align=center width=420px>
-		<center>
-			<tr>
-				<td>
-				</td>
-			</tr>
-		</center>
-	</table>
-	<table align=center width=400px>
-		<tr>
-			<td align=center width=400px>
-				<center>
-					<img class="round" style="width:450px" src="./resources/method_diagram.png"/>
-				</center>
-			</td>
-		</tr>
-	</table>
-	<table align=center width=850px>
-		<center>
-			<tr>
-				<td>
-					Mamba-FCS is a Siamese Mamba-based architecture with a shared Visual State Space Model encoder, Joint Spatio-Frequency Fusion blocks, Change-Guided Attention modules, and three task-specific decoders (BCD, SCD, and auxiliary). Complete source code, configuration files, and pre-trained models are available on GitHub (no Hugging Face model yet).
-				</td>
-			</tr>
-		</center>
-	</table>
-	<table align=center width=800px>
-		<br>
-		<tr><center>
-			<span style="font-size:28px">&nbsp;<a href='https://github.com/Buddhi19/MambaFCS'>[GitHub]</a>
-			</center>
-		</span>
-	</table>
-	<br>
-	<hr>
-	<table align=center width=450px>
-		<center><h1>Paper and Supplementary Material</h1></center>
-		<tr>
-			<td><a href="https://arxiv.org/pdf/2508.08232"><img class="layered-paper-big" style="height:175px" src="./resources/paper.png"/></a></td>
-			<td><span style="font-size:14pt">Buddhi Wijenayake, Athulya Ratnayake, Praveen Sumanasekara, Roshan Godaliyadda, Parakrama Ekanayake, Vijitha Herath, Nichula Wasalathilaka.<br>
-				<b>Mamba-FCS: Joint Spatio-Frequency Feature Fusion, Change-Guided Attention, and SeK Loss for Enhanced Semantic Change Detection in Remote Sensing.</b><br>
-				IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, 2026.<br>
-				(hosted on <a href="https://arxiv.org/abs/2508.08232">ArXiv</a> | official <a href="https://doi.org/10.1109/JSTARS.2026.3663066">IEEE</a>)<br>
-			</td>
-		</tr>
-	</table>
-	<br>
+  <section class="section muted-section" id="method">
+    <div class="container is-max-widescreen">
+      <div class="section-heading">
+        <p class="eyebrow">Architecture</p>
+        <h2 class="title is-3">
+      </div>
 
-	<table align=center width=600px>
-		<tr>
-			<td><span style="font-size:14pt"><center>
-				<a href="./resources/bibtex.txt">[Bibtex]</a>
-			</center></td>
-		</tr>
-	</table>
+      <figure class="figure-panel">
+        <img src="./resources/full_architecture.png" alt="Full Mamba-FCS architecture diagram.">
+        <figcaption>Full Mamba-FCS architecture with Siamese VMamba feature extraction, binary change decoding, semantic decoding, and cross-branch guidance.</figcaption>
+      </figure>
 
-	<hr>
-	<br>
+      <div class="columns is-centered method-columns">
+        <div class="column is-four-fifths">
+          <div class="content">
+            <h3 class="title is-4">Method in 30 seconds</h3>
+            <ol>
+              <li>A Siamese shared VMamba encoder processes pre-change and post-change images through four hierarchical stages.</li>
+              <li>The implementation uses VMamba-Base with channel dimensions 128 / 256 / 512 / 1024 and VSS block counts 2 / 2 / 15 / 2.</li>
+              <li>The Binary Change Decoder fuses paired temporal features using Joint Spatio-Frequency Fusion and produces binary maps plus intermediate change cues.</li>
+              <li>Two symmetric Semantic Map Decoders predict timestamp-specific semantic maps, guided by Change-Guided Attention.</li>
+              <li>A SeK-inspired term improves class-imbalanced semantic consistency.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
 
-	<table align=center width=900px>
-		<tr>
-			<td width=400px>
-				<left>
-					<center><h1>Acknowledgements</h1></center>
-					This template was originally made by <a href="http://web.mit.edu/phillipi/">Phillip Isola</a> and <a href="http://richzhang.github.io/">Richard Zhang</a> for a <a href="http://richzhang.github.io/colorization/">colorful</a> ECCV project; the code can be found <a href="https://github.com/richzhang/webpage-template">here</a>.
-				</left>
-			</td>
-		</tr>
-	</table>
+      <figure class="figure-panel compact-figure fusion-wide">
+        <img src="./resources/fusion.png" alt="Joint spatio-frequency fusion block diagram.">
+        <figcaption>
+          Frequency-domain analysis is known to reveal hidden structure in signals and images; Mamba-FCS asks whether the latent states in semantic change detection also carry hidden frequency information. The fusion block tests this idea by combining T1 spatial features, T2 spatial features, FFT log-amplitude features, and an absolute-difference branch, then refining the result with CBAM attention.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
 
-<br>
+  <section class="section" id="results">
+    <div class="container is-max-widescreen">
+      <div class="section-heading">
+        <p class="eyebrow">Benchmarks</p>
+        <h2 class="title is-3">Headline quantitative results</h2>
+      </div>
+      <div class="metric-control field is-horizontal">
+        <div class="field-label is-normal">
+          <label class="label" for="metric-select">Metric</label>
+        </div>
+        <div class="field-body">
+          <div class="field">
+            <div class="control">
+              <div class="select is-small">
+                <select id="metric-select" aria-label="Select quantitative metric">
+                  <option value="sek" selected>SeK (%)</option>
+                  <option value="oa">OA (%)</option>
+                  <option value="fscd">F_SCD (%)</option>
+                  <option value="miou">mIoU (%)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="plots-grid" aria-live="polite">
+        <figure class="plot-panel">
+          <h3 class="title is-5">SECOND</h3>
+          <div id="plot-second" class="metric-plot" role="img" aria-label="SECOND model comparison plot"></div>
+        </figure>
+        <figure class="plot-panel">
+          <h3 class="title is-5">Landsat-SCD</h3>
+          <div id="plot-landsat" class="metric-plot" role="img" aria-label="Landsat-SCD model comparison plot"></div>
+        </figure>
+      </div>
+      <p class="plot-note">Use the selector to compare OA, F<sub>SCD</sub>, mIoU, or SeK across every model reported in the Mamba-FCS paper.</p>
+
+      <div class="callout-grid">
+        <div class="callout">
+          <h3>SECOND</h3>
+          <p>Mamba-FCS outperforms ChangeMamba across all listed metrics, including SeK 25.50 vs 24.11 and mIoU 74.07 vs 73.68.</p>
+        </div>
+        <div class="callout">
+          <h3>Landsat-SCD</h3>
+          <p>The largest visible gap is on SeK: 60.26 for Mamba-FCS compared with 53.66 for ChangeMamba and 52.63 for SCanNet.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section muted-section" id="analysis">
+    <div class="container is-max-widescreen">
+      <div class="section-heading">
+        <p class="eyebrow">Qualitative and transition-level evidence</p>
+        <h2 class="title is-3">Beyond scalar metrics</h2>
+      </div>
+
+      <div class="columns is-variable is-6">
+        <div class="column">
+          <div class="content">
+            <h3 class="title is-4">Qualitative findings</h3>
+            <p>
+              On SECOND, Mamba-FCS produces more compact building and playground regions, suppresses false
+              change blobs around buildings and vegetation, and better preserves unchanged structures than
+              HRSCD-S4, Bi-SRNet, SCanNet, and ChangeMamba.
+            </p>
+            <p>
+              On Landsat-SCD, the method captures water regions more accurately, produces cleaner desert
+              extents, and forms more coherent farmland/water transition fronts with fewer false alarms.
+            </p>
+          </div>
+        </div>
+        <div class="column">
+          <div class="content">
+            <h3 class="title is-4">Ablation messages</h3>
+            <ul>
+              <li>Removing the FFT2 branch lowers performance on both datasets, confirming that frequency cues help sharpen boundaries and reduce appearance-related noise.</li>
+              <li>Removing CGA reduces semantic and change consistency, especially around boundaries.</li>
+              <li>Removing the SeK-inspired loss causes the largest SeK-oriented degradation, including a 3.70-point SeK drop on Landsat-SCD.</li>
+              <li>On SECOND, the SeK-inspired term outperforms added Focal and Dice loss variants in the loss analysis.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="image-grid">
+        <figure class="figure-panel">
+          <img src="./resources/confusion_second.png" alt="SECOND from-to transition confusion matrix analysis.">
+          <figcaption>SECOND transition-level analysis.</figcaption>
+        </figure>
+        <figure class="figure-panel">
+          <img src="./resources/confusion_landsat.png" alt="Landsat-SCD from-to transition confusion matrix analysis.">
+          <figcaption>Landsat-SCD transition-level analysis.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="reproducibility">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column is-four-fifths">
+          <p class="eyebrow">Reproducibility</p>
+          <h2 class="title is-3">Implementation details</h2>
+          <p class="lead">
+            The paper reports standard splits on SECOND and Landsat-SCD, PyTorch training, and ablations
+            averaged over five runs.
+          </p>
+          <table class="table is-narrow is-fullwidth reproducibility-table">
+            <tbody>
+              <tr><th>Optimizer</th><td>AdamW</td><th>Batch size</th><td>4</td></tr>
+              <tr><th>SECOND schedule</th><td>30,000 iterations</td><th>Landsat-SCD schedule</th><td>50,000 iterations</td></tr>
+              <tr><th>Hardware</th><td>NVIDIA RTX A6000, 48 GB VRAM</td><th>Workstation</th><td>32-core CPU, 126 GB RAM</td></tr>
+              <tr><th>Training time</th><td>24 h SECOND, 36 h Landsat-SCD</td><th>Inference</th><td>284.69 ms per bi-temporal RGB pair</td></tr>
+              <tr><th>Peak GPU memory</th><td>1152.65 MB</td><th>Model size</th><td>189.54M parameters</td></tr>
+              <tr><th>Compute</th><td>263.15 GFLOPs</td><th>Deployment message</th><td>Higher-capacity model without a proportional inference-time penalty</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section muted-section" id="limitations">
+    <div class="container is-max-desktop">
+      <div class="section-heading">
+        <p class="eyebrow">Limitations and future work</p>
+        <h2 class="title is-3">Open directions</h2>
+      </div>
+      <div class="content has-text-justified">
+        <p>
+          The SeK-inspired loss is developed in a fully supervised pixel-wise setting, and its behavior
+          under label noise, weak supervision, semi-supervised learning, or domain-adaptive semantic
+          change detection remains open. Future work includes lighter or distilled variants, multi-modal
+          fusion, and SeK-guided learning beyond fully supervised settings.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="citation">
+    <div class="container is-max-desktop">
+      <div class="section-heading">
+        <p class="eyebrow">Citation</p>
+        <h2 class="title is-3">Cite Mamba-FCS</h2>
+      </div>
+      <div class="content">
+        <p>
+          Wijenayake, B., Ratnayake, A., Sumanasekara, P., Godaliyadda, R., Ekanayake, P.,
+          Herath, V., and Wasalathilaka, N., "Mamba-FCS: Joint Spatio-Frequency Feature Fusion,
+          Change-Guided Attention, and SeK Inspired Loss for Enhanced Semantic Change Detection in
+          Remote Sensing," <em>IEEE Journal of Selected Topics in Applied Earth Observations and
+          Remote Sensing</em>, vol. 19, pp. 7680-7698, 2026. DOI: 10.1109/JSTARS.2026.3663066.
+        </p>
+        <pre class="bibtex"><code>@ARTICLE{mambafcs2026,
+  author={Wijenayake, Buddhi and Ratnayake, Athulya and Sumanasekara, Praveen and Godaliyadda, Roshan and Ekanayake, Parakrama and Herath, Vijitha and Wasalathilaka, Nichula},
+  title={Mamba-FCS: Joint Spatio-Frequency Feature Fusion, Change-Guided Attention, and SeK Inspired Loss for Enhanced Semantic Change Detection in Remote Sensing},
+  journal={IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing},
+  year={2026},
+  volume={19},
+  pages={7680--7698},
+  doi={10.1109/JSTARS.2026.3663066}
+}</code></pre>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p>
+        Mamba-FCS research page. Source code, configurations, notebook, and released weights are available from the project links above.
+      </p>
+      <p class="footer-links">
+        <a href="https://doi.org/10.1109/JSTARS.2026.3663066">DOI</a>
+        <a href="https://arxiv.org/abs/2508.08232">arXiv</a>
+        <a href="https://github.com/Buddhi19/MambaFCS">GitHub</a>
+        <a href="https://huggingface.co/buddhi19/MambaFCS">Hugging Face</a>
+      </p>
+    </div>
+  </div>
+</footer>
 </body>
 </html>
