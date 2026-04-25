@@ -6,6 +6,8 @@
 
 <h2>🏆 Current Best-Performing Algorithm for Remote Sensing Semantic Change Detection 🏆</h2>
 
+## 🌐 [**Project Page**](https://buddhi19.github.io/MambaFCS/)
+
 <p align="center">
   <a href="https://ieeexplore.ieee.org/document/11391528">
     <img src="https://img.shields.io/badge/IEEE%20JSTARS-Published%20Paper-00629B?logo=ieee&logoColor=white" alt="IEEE JSTARS Published Paper">
@@ -20,7 +22,7 @@
     <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License">
   </a>
   <a href="#-citations">
-    <img src="https://img.shields.io/badge/Citations-1-blue.svg" alt="Citations">
+    <img src="https://img.shields.io/badge/Citations-3-blue.svg" alt="Citations">
   </a>
 </p>
 <p>
@@ -347,5 +349,10 @@ You might consider citing:
 
 1. **Shen, H., et al. (2026)**  
    *Foundation Model-Driven Semantic Change Detection in Remote Sensing Imagery*  
-   [📄 arXiv:2602.13780](https://arxiv.org/abs/2602.13780)
 
+2. **史振威, et al. (2026)**
+    *基于深度学习的双时相光学遥感图像变化检测方法综述* (A review of deep learning-based methods for detecting changes in dual-temporal optical remote sensing images.)
+
+3. **Wasalathilake, N., et al (2026)**
+  *A Controlled Benchmark of Visual State-Space Backbones with Domain-Shift and Boundary Analysis for Remote-Sensing Segmentation*
+  
