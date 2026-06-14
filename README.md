@@ -22,7 +22,7 @@
     <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License">
   </a>
   <a href="#-citations">
-    <img src="https://img.shields.io/badge/Citations-4-blue.svg" alt="Citations">
+    <img src="https://img.shields.io/badge/Citations-6-blue.svg" alt="Citations">
   </a>
 </p>
 <p>
@@ -358,3 +358,9 @@ You might consider citing:
 
 4. **Chen, Zhong., et al. (2026)**
    *Remote Sensing Semantic Change Detection with Multi-dimensional Spatiotemporal Scanning*
+
+5. **Liang, J., et al. (2026)**
+    *FSU-Mamba: Frequency-aware and Spatial-Temporal State Space Model for Robust Building Change Detection via Uncertainty-weighted Optimization*
+
+6. **Ren, J., & Xu, Z. (2026)**
+    *Multi‐Scale Frequency Expert Networks via SAM2 Adaptation for Change Detection*
