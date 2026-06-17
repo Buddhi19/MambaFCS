@@ -23,7 +23,7 @@ import MambaFCS.changedetection.utils_func.lovasz_loss as L
 from torch.optim.lr_scheduler import StepLR
 from MambaFCS.changedetection.utils_func.mcd_utils import accuracy, SCDD_eval_all, AverageMeter
 
-from MambaFCS.changedetection.utils_func.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass, SEK_loss_from_eval
+from MambaFCS.changedetection.utils_func.loss import contrastive_loss, ce2_dice1, ce2_dice1_multiclass, SEK_loss_from_eval, SeK_Loss
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -112,6 +112,13 @@ class Trainer(object):
         elem_num = len(self.train_data_loader)
         train_enumerator = enumerate(self.train_data_loader)
 
+
+        sek_criterion = SeK_Loss(
+            num_classes=self.args.num_classes,  # SECOND dataset classes (exclude non-change)
+            non_change_class=0,
+            beta=1.5
+        ).cuda()
+
         for _ in tqdm(range(elem_num)):
             itera, data = train_enumerator.__next__()
             pre_change_imgs, post_change_imgs, label_cd, label_clf_t1, label_clf_t2, _ = data
@@ -157,13 +164,12 @@ class Trainer(object):
                 reduction='mean'
             )
 
-            sek_loss_value = SEK_loss_from_eval(
+            sek_loss_value = sek_criterion(
                 output_semantic_t1, 
                 output_semantic_t2,
                 label_clf_t1,
                 label_clf_t2,
-                output_1,
-                self.args.num_classes
+                change_mask
             )
 
             # ================== Loss Weighting ==================
