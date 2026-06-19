@@ -315,6 +315,31 @@ If Mamba-FCS fuels your research, please cite:
 You might consider citing:
 
 ```bibtex
+@article{Chen_2024,
+   title={ChangeMamba: Remote Sensing Change Detection With Spatiotemporal State Space Model},
+   volume={62},
+   ISSN={1558-0644},
+   url={http://dx.doi.org/10.1109/TGRS.2024.3417253},
+   DOI={10.1109/tgrs.2024.3417253},
+   journal={IEEE Transactions on Geoscience and Remote Sensing},
+   publisher={Institute of Electrical and Electronics Engineers (IEEE)},
+   author={Chen, Hongruixuan and Song, Jian and Han, Chengxi and Xia, Junshi and Yokoya, Naoto},
+   year={2024},
+   pages={1–20} }
+```
+```bibtex
+@misc{liu2024vmambavisualstatespace,
+      title={VMamba: Visual State Space Model}, 
+      author={Yue Liu and Yunjie Tian and Yuzhong Zhao and Hongtian Yu and Lingxi Xie and Yaowei Wang and Qixiang Ye and Jianbin Jiao and Yunfan Liu},
+      year={2024},
+      eprint={2401.10166},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2401.10166}, 
+}
+```
+
+```bibtex
 @INPROCEEDINGS{11450773,
   author={Wijenayake, W.M.B.S.K. and Ratnayake, R.M.A.M.B. and Sumanasekara, D.M.U.P. and Wasalathilaka, N.S. and Piratheepan, M. and Godaliyadda, G.M.R.I. and Ekanayake, M.P.B. and Herath, H.M.V.R.},
   booktitle={2025 IEEE 19th International Conference on Industrial and Information Systems (ICIIS)}, 
