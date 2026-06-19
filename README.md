@@ -4,7 +4,7 @@
 
 <h2>Joint Spatio-Frequency Feature Fusion with Change-Guided Attention and SeK Loss</h2>
 
-<h2>🏆 Current Best-Performing Algorithm for Remote Sensing Semantic Change Detection 🏆</h2>
+<h2>🏆 A Best-Performing Algorithm for Remote Sensing Semantic Change Detection 🏆</h2>
 
 ## 🌐 [**Project Page**](https://buddhi19.github.io/MambaFCS/)
 
