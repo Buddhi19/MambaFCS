@@ -4,7 +4,7 @@
 
 <h2>Joint Spatio-Frequency Feature Fusion with Change-Guided Attention and SeK Loss</h2>
 
-<h2>🏆 A Best-Performing Algorithm for Remote Sensing Semantic Change Detection 🏆</h2>
+<h2>🏆 The Current Best-Performing Algorithm for Remote Sensing Semantic Change Detection 🏆</h2>
 
 ## 🌐 [**Project Page**](https://buddhi19.github.io/MambaFCS/)
 
@@ -109,8 +109,6 @@ Use these weights directly for inference and evaluation, or keep them alongside 
 
 | Model         | Links                                                                                                    |
 |---------------|----------------------------------------------------------------------------------------------------------|
-| VMamba-Tiny   | [Zenodo](https://zenodo.org/records/14037769) • [GDrive](https://drive.google.com/file/d/160PXughGMNZ1GyByspLFS68sfUdrQE2N/view?usp=drive_link) • [BaiduYun](https://pan.baidu.com/s/1P9KRVy4lW8LaKJ898eQ_0w?pwd=7qxh) |
-| VMamba-Small  | [Zenodo](https://zenodo.org/records/14037769) • [GDrive](https://drive.google.com/file/d/1dxHtFEgeJ9KL5WiLlvQOZK5jSEEd2Nmz/view?usp=drive_link) • [BaiduYun](https://pan.baidu.com/s/1RRjTA9ONhO43sBLp_a2TSw?pwd=6qk1) |
 | VMamba-Base   | [Zenodo](https://zenodo.org/records/14037769) • [GDrive](https://drive.google.com/file/d/1kUHSBDoFvFG58EmwWurdSVZd8gyKWYfr/view?usp=drive_link) • [BaiduYun](https://pan.baidu.com/s/14_syzqwNnVB8rD3tejEZ4w?pwd=q825) |
 
 Set `pretrained_weight_path` in your YAML to the downloaded `.pth`.
@@ -258,6 +256,8 @@ Pair it with the released checkpoints on [Hugging Face](https://huggingface.co/b
 
 <p><strong>Straight from the paper — reproducible out of the box:</strong></p>
 
+We choose a **```batchsize of 2```** for all of our experiments.
+
 <table>
   <thead>
     <tr>
@@ -352,32 +352,8 @@ If Mamba-FCS fuels your research, please cite:
 
 ```
 
-You might consider citing:
 
-```bibtex
-@article{Chen_2024,
-   title={ChangeMamba: Remote Sensing Change Detection With Spatiotemporal State Space Model},
-   volume={62},
-   ISSN={1558-0644},
-   url={http://dx.doi.org/10.1109/TGRS.2024.3417253},
-   DOI={10.1109/tgrs.2024.3417253},
-   journal={IEEE Transactions on Geoscience and Remote Sensing},
-   publisher={Institute of Electrical and Electronics Engineers (IEEE)},
-   author={Chen, Hongruixuan and Song, Jian and Han, Chengxi and Xia, Junshi and Yokoya, Naoto},
-   year={2024},
-   pages={1–20} }
-```
-```bibtex
-@misc{liu2024vmambavisualstatespace,
-      title={VMamba: Visual State Space Model}, 
-      author={Yue Liu and Yunjie Tian and Yuzhong Zhao and Hongtian Yu and Lingxi Xie and Yaowei Wang and Qixiang Ye and Jianbin Jiao and Yunfan Liu},
-      year={2024},
-      eprint={2401.10166},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2401.10166}, 
-}
-```
+You might consider citing most influenced papers for our work,
 
 ```bibtex
 @INPROCEEDINGS{11450773,
@@ -391,9 +367,6 @@ You might consider citing:
   keywords={Accuracy;Computational modeling;Pipelines;Feature extraction;Transformers;Decoding;Remote sensing;Optimization;Monitoring;Context modeling;Remote Sensing;Binary Change Detection;State Space Models;Mamba},
   doi={10.1109/ICIIS69028.2026.11450773}}
 
-```
-
-```bibtex
 @INPROCEEDINGS{11217111,
   author={Ratnayake, R.M.A.M.B. and Wijenayake, W.M.B.S.K. and Sumanasekara, D.M.U.P. and Godaliyadda, G.M.R.I. and Herath, H.M.V.R. and Ekanayake, M.P.B.},
   booktitle={2025 Moratuwa Engineering Research Conference (MERCon)}, 
@@ -404,6 +377,28 @@ You might consider citing:
   pages={84-89},
   keywords={Training;Accuracy;Attention mechanisms;Sensitivity;Semantics;Refining;Feature extraction;Transformers;Power capacitors;Remote sensing},
   doi={10.1109/MERCon67903.2025.11217111}}
+
+@article{Chen_2024,
+   title={ChangeMamba: Remote Sensing Change Detection With Spatiotemporal State Space Model},
+   volume={62},
+   ISSN={1558-0644},
+   url={http://dx.doi.org/10.1109/TGRS.2024.3417253},
+   DOI={10.1109/tgrs.2024.3417253},
+   journal={IEEE Transactions on Geoscience and Remote Sensing},
+   publisher={Institute of Electrical and Electronics Engineers (IEEE)},
+   author={Chen, Hongruixuan and Song, Jian and Han, Chengxi and Xia, Junshi and Yokoya, Naoto},
+   year={2024},
+   pages={1–20} }
+
+@misc{liu2024vmambavisualstatespace,
+      title={VMamba: Visual State Space Model}, 
+      author={Yue Liu and Yunjie Tian and Yuzhong Zhao and Hongtian Yu and Lingxi Xie and Yaowei Wang and Qixiang Ye and Jianbin Jiao and Yunfan Liu},
+      year={2024},
+      eprint={2401.10166},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2401.10166}, 
+}
 ```
 
 ---
