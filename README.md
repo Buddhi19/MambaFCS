@@ -322,7 +322,7 @@ We choose a **```batchsize of 2```** for all of our experiments.
   </tbody>
 </table>
 
-## ```If you find errors``` when reproducing the results please raise an ``issue```. We would be happy to help 💁.
+## ```If you find errors``` when reproducing the results please raise an ```issue```. We would be happy to help 💁.
 
 
 ## 🙏 Acknowledgements
