@@ -2,9 +2,10 @@
 
 <h1>🚀 Mamba-FCS</h1>
 
-<h2>Joint Spatio-Frequency Feature Fusion with Change-Guided Attention and SeK Loss</h2>
+<h4>Official implementation of Mamba-FCS: Joint Spatio- Frequency Feature Fusion, Change-Guided Attention, and SeK Loss for Enhanced Semantic Change Detection in Remote Sensing
+</h4>
 
-<h2>🏆 The Current Best-Performing Algorithm for Remote Sensing Semantic Change Detection 🏆</h2>
+<h4>🏆 The Current Best-Performing Algorithm for Remote Sensing Semantic Change Detection 🏆</h4>
 
 ## 🌐 [**Project Page**](https://buddhi19.github.io/MambaFCS/)
 
