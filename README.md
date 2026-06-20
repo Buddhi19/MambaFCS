@@ -321,9 +321,9 @@ We choose a **```batchsize of 2```** for all of our experiments.
     </tr>
   </tbody>
 </table>
-Visuals speak louder: expect dramatically cleaner boundaries and far better rare-class detection.
 
----
+## ```If you find errors``` when reproducing the results please raise an ``issue```. We would be happy to help 💁.
+
 
 ## 🙏 Acknowledgements
 
